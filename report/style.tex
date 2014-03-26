@@ -1,0 +1,65 @@
+%% Файл стиля для оформления дипломной работы
+
+\documentclass[14pt,a4paper,oneside]{extarticle}
+
+\usepackage[russian]{babel}	% Использование русского языка (работает расстановка переносов)
+\usepackage[utf8]{inputenc}	% Кодировка utf8
+\usepackage[T2A]{fontenc}	% Шрифт русский, Times New Roman
+\usepackage{cmap} 		% Улучшенный поиск русских слов в полученном pdf-файле
+
+\usepackage{indentfirst} 	% Включить отступ у первого абзаца
+
+\usepackage{setspace}		% Полуторный интервал
+\onehalfspacing
+
+\usepackage{fancyhdr}		% Нумерация страниц в нижнем правом углу
+\fancypagestyle{rightbottom} {
+\renewcommand{\headrulewidth}{0pt}
+	\fancyhead{}
+	\fancyfoot{}
+	\fancyfoot[R]{\thepage}
+}
+\pagestyle{rightbottom}
+
+\renewcommand\contentsname{Содержание} % Переименовываем заголовок Содержания
+
+\usepackage[a4paper, 			% Отступы с краев листа
+	left=3.5cm, right=1.5cm, 
+	top=2cm, bottom=2cm, 
+	footskip=1.25cm]{geometry} 
+	
+% Заголовки разделов без нумерации
+\newcommand{\anonsection}[1]{\section*{#1}\addcontentsline{toc}{section}{#1}}
+\newcommand{\anonsubsection}[1]{\subsection*{#1}\addcontentsline{toc}{subsection}{#1}}
+\newcommand{\anonsubsubsection}[1]{\subsubsection*{#1}\addcontentsline{toc}{subsubsection}{#1}}
+
+% Точка в конце номаре раздела
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}.}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}.}
+\renewcommand{\thesection}{\arabic{section}.}
+
+\setcounter{tocdepth}{3}	% Включать в оглавление заголовки до 3-го уровня включительно
+
+\usepackage{graphicx} 		% Использование изображений
+\graphicspath{{../diagrams/}}	% Путь к каталогу с изображениями
+
+\newcommand{\pic}[1]{\ref{#1}} 	% Ссылка на изображение
+\newcommand{\tab}[1]{\ref{#1}} 	% Ссылка на таблицу
+
+\usepackage[tableposition=top]{caption}
+\usepackage{subcaption}
+\DeclareCaptionLabelFormat{gostfigure}{\textbf{Рис. #2.}}	% Подпись к рисунку
+\DeclareCaptionLabelFormat{gosttable}{\textbf{Табл. #2.}}	% Подпись к таблице
+\DeclareCaptionLabelSeparator{gost}{~ ~}
+\captionsetup{labelsep=gost}
+\captionsetup[figure]{labelformat=gostfigure}
+\captionsetup[table]{labelformat=gosttable}
+\renewcommand{\thesubfigure}{\asbuk{subfigure}}
+
+\usepackage{multirow}		% Возможность объединения нескольких ячеек таблицы в одну
+
+\makeatletter				% Изменение оформления нумерации списка литературы
+\renewcommand{\@biblabel}[1]{#1.\hfil}
+\makeatother
+\bibliographystyle{utf8gost705u}	% Cтилевой файл для оформления по ГОСТу
