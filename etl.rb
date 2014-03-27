@@ -55,15 +55,22 @@ begin
 
 	storage = Mysql.new 'localhost', 'root', 'finncrisporiginal', 'warehouse'
 
-	res = storage.query('SELECT * FROM updates GROUP BY affiliate_id HAVING time = MAX(time)')
-	res.num_rows do |i|
-		row = res.fetch_row
-		if (affiliate_id = row['affiliate_id'] > databases.count)
+	res = storage.query("SELECT u.affiliate_id AS affiliate_id, u.s AS s, u.p AS p, u.sp AS sp
+						FROM updates u
+						INNER JOIN (SELECT affiliate_id, MAX(time) AS time FROM updates GROUP BY affiliate_id) max_time 
+							ON u.time = max_time.time AND u.affiliate_id = max_time.affiliate_id")
+
+	res.each_hash do |row|
+		affiliate_id = row['affiliate_id'].to_i
+
+		if affiliate_id >= databases.count
 			puts "Too big 'affiliate_id' value (#{affiliate_id}) in 'updates' table"
 			next
 		end
 
-		last_ids[i] = {:last_sid => row['s'], :last_pid => row['p'], :last_spid => row['sp']}
+		last_ids[affiliate_id][:last_sid] = row['s'].to_i
+		last_ids[affiliate_id][:last_pid] = row['p'].to_i
+		last_ids[affiliate_id][:last_spid] = row['sp'].to_i
 	end
 
 	threads = []
