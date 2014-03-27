@@ -28,6 +28,62 @@ class AffiliateOne < Company
 	end
 
 	def extract()
+		begin
+			con = Mysql.new 'localhost', 'root', 'finncrisporiginal', 'company'
+
+			res = con.query("SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
+						FROM \
+						(SELECT MAX(SID) AS max_id FROM S) s \
+						JOIN (SELECT MAX(PID) AS max_id FROM P) p \
+						JOIN (SELECT MAX(SPID) AS max_id FROM SP) sp").fetch_hash
+
+			max_S = res['SID']
+			max_P = res['PID']
+			max_SP = res['SPID']
+
+			res = con.query("SELECT \
+								S.SName AS Supplier, \
+								P.PName AS Part, \
+								SP.Qty AS Quantity, \
+								SP.OrderDate AS OrderDate, \
+								SP.Period AS Period, \
+								SP.ShipDate AS ShipDate, \
+								S.Risk AS Risk, \
+								P.HTP AS HTP, \
+								SUM(P.Weight) AS SPWeight \
+							FROM SP \
+							INNER JOIN S ON S.SID = SP.SID \
+							INNER JOIN P ON P.PID = SP.PID \
+							WHERE \
+								S.SID BETWEEN #{@last_s} AND #{max_S} AND \
+								P.PID BETWEEN #{@last_p} AND #{max_P} AND \
+								SP.SPID BETWEEN #{@last_sp} AND #{max_SP} AND \
+								S.SName IS NOT NULL AND \
+								S.SCity IS NOT NULL AND \
+								S.Address IS NOT NULL AND \
+								P.PName IS NOT NULL AND \
+								P.Weight > 0 AND \
+								P.HTP IN (0, 1) AND \
+								SP.OrderDate IS NOT NULL AND \
+								SP.Qty > 0 AND \
+								SP.Price > 0 AND \
+								SP.Period >= 0 AND \
+								SP.OrderDate <= SP.ShipDate \
+							HAVING SPWeight <= 1500")
+
+			puts "Values for #{@affiliate_id} are added to warehouse: suppliers (#{@last_s}, #{max_S}), parts (#{@last_p}, #{max_P}), relations (#{@last_sp}, #{max_SP})"
+
+			@last_s = max_S
+			@last_p = max_P
+			@last_sp = max_SP
+
+			self.load()
+		rescue Mysql::Error => e
+			puts e.errno
+			puts e.error
+		ensure
+			con.close if con
+		end
 		puts 'Company 1 data extracted'
 	end
 end
