@@ -50,7 +50,7 @@ begin
 		AffiliateTwo
 	]
 
-	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
+	last_ids = Array.new(databases.count) {{:last_sid => 1, :last_pid => 1, :last_spid => 1}}
 
 	storage = Mysql.new 'localhost', 'root', 'finncrisporiginal', 'warehouse'
 
