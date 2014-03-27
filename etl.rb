@@ -50,7 +50,7 @@ begin
 		AffiliateTwo
 	]
 
-	last_ids = Array.new(databases.count) {{'last_sid' => 0, 'last_pid' => 0, 'last_spid' => 0}}
+	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
 
 	storage = Mysql.new 'localhost', 'root', 'finncrisporiginal', 'warehouse'
 
@@ -62,13 +62,13 @@ begin
 			next
 		end
 
-		last_ids[i] = {'last_sid' => row['s'], 'last_pid' => row['p'], 'last_spid' => row['sp']}
+		last_ids[i] = {:last_sid => row['s'], :last_pid => row['p'], :last_spid => row['sp']}
 	end
 
 	threads = []
 	databases.each_with_index {|database, i|
 		threads << Thread.new() {
-			database.new(storage, i, last_ids[i]['last_sid'], last_ids[i]['last_pid'], last_ids[i]['last_spid']).extract()
+			database.new(storage, i, last_ids[i][:last_sid], last_ids[i][:last_pid], last_ids[i][:last_spid]).extract()
 		}
 	}
 	threads.each {|t| t.join}
