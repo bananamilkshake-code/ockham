@@ -14,9 +14,10 @@ class Company
 		@last_sp = last_sp
 	end
 
+	protected
 	def load()
-		storage.query('INSERT INTO updates (time, affiliate_id, s, p, sp) \
-						VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@last_s}. #{@last_p}, #{@last_sp})')
+		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) \
+				VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@last_s}, #{@last_p}, #{@last_sp})")
 	end
 end
 
