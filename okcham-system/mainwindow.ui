@@ -42,7 +42,7 @@
      <locale language="Russian" country="Russia"/>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_ETL">
      <attribute name="title">
@@ -61,7 +61,7 @@
        <string>ETL</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="text_etl_process">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -217,7 +217,7 @@
        <rect>
         <x>430</x>
         <y>120</y>
-        <width>41</width>
+        <width>51</width>
         <height>16</height>
        </rect>
       </property>
@@ -233,6 +233,15 @@
         <width>71</width>
         <height>24</height>
        </rect>
+      </property>
+      <property name="minimum">
+       <number>-1</number>
+      </property>
+      <property name="maximum">
+       <number>12</number>
+      </property>
+      <property name="value">
+       <number>-1</number>
       </property>
      </widget>
      <widget class="QPushButton" name="button_cron_notation">
@@ -323,30 +332,15 @@
        <rect>
         <x>30</x>
         <y>10</y>
-        <width>131</width>
+        <width>81</width>
         <height>23</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>Time</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Place</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Part</string>
-       </property>
-      </item>
      </widget>
      <widget class="QLabel" name="label_y">
       <property name="geometry">
        <rect>
-        <x>200</x>
+        <x>120</x>
         <y>10</y>
         <width>16</width>
         <height>16</height>
@@ -359,34 +353,19 @@
      <widget class="QComboBox" name="combo_y">
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>140</x>
         <y>10</y>
-        <width>141</width>
+        <width>91</width>
         <height>23</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>Time</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Place</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Part</string>
-       </property>
-      </item>
      </widget>
      <widget class="QComboBox" name="combo_z_value">
       <property name="geometry">
        <rect>
-        <x>460</x>
+        <x>340</x>
         <y>10</y>
-        <width>181</width>
+        <width>161</width>
         <height>23</height>
        </rect>
       </property>
@@ -394,7 +373,7 @@
      <widget class="QLabel" name="label_z">
       <property name="geometry">
        <rect>
-        <x>390</x>
+        <x>270</x>
         <y>10</y>
         <width>57</width>
         <height>15</height>
@@ -404,21 +383,24 @@
        <string>TextLabel</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="button_olap">
+      <property name="geometry">
+       <rect>
+        <x>550</x>
+        <y>10</y>
+        <width>80</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Start</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>Data Mining</string>
      </attribute>
-     <widget class="QTableView" name="table_classification">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>40</y>
-        <width>621</width>
-        <height>171</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QPushButton" name="button_classify">
       <property name="geometry">
        <rect>
@@ -437,7 +419,7 @@
        <rect>
         <x>10</x>
         <y>280</y>
-        <width>611</width>
+        <width>631</width>
         <height>231</height>
        </rect>
       </property>
@@ -478,6 +460,58 @@
        </rect>
       </property>
      </widget>
+     <widget class="QTableWidget" name="table_classification">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>631</width>
+        <height>201</height>
+       </rect>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::NoSelection</enum>
+      </property>
+      <property name="rowCount">
+       <number>0</number>
+      </property>
+      <property name="columnCount">
+       <number>3</number>
+      </property>
+      <column>
+       <property name="text">
+        <string>Low</string>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Middle</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>High</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>10</y>
+        <width>391</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Perfomrs suppliers classification by risk</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>
@@ -496,7 +530,7 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
