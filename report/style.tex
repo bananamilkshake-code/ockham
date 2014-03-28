@@ -42,7 +42,7 @@
 \setcounter{tocdepth}{3}	% Включать в оглавление заголовки до 3-го уровня включительно
 
 \usepackage{graphicx} 		% Использование изображений
-\graphicspath{{../diagrams/}}	% Путь к каталогу с изображениями
+\graphicspath{{img/}}		% Путь к каталогу с изображениями
 
 \newcommand{\pic}[1]{\ref{#1}} 	% Ссылка на изображение
 \newcommand{\tab}[1]{\ref{#1}} 	% Ссылка на таблицу
@@ -59,7 +59,8 @@
 
 \usepackage{multirow}		% Возможность объединения нескольких ячеек таблицы в одну
 
-\makeatletter				% Изменение оформления нумерации списка литературы
+% Изменение оформления нумерации списка литературы
+\makeatletter
 \renewcommand{\@biblabel}[1]{#1.\hfil}
 \makeatother
 \bibliographystyle{utf8gost705u}	% Cтилевой файл для оформления по ГОСТу
