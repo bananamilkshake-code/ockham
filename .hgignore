@@ -7,3 +7,5 @@ build
 *.tex.backup
 *.log
 *.synctex.gz
+*.autosave
+*.pro.user
