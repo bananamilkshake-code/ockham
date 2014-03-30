@@ -1,15 +1,20 @@
 CREATE TABLE suppliers (
 	id INT (10) AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(20) NOT NULL,
-	risk TINYINT(2) CHECK(risk IN (1, 2, 3))
+	city VARCHAR(20) NOT NULL,
+	address VARCHAR(20) NOT NULL,
+	risk TINYINT(2) CHECK(risk IN (0, 1, 2, 3)),
+
+	UNIQUE(name, city, address)
 );
 
 CREATE TABLE parts (
 	id INT (10) AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(20) NOT NULL,
 	HTP TINYINT(1) NOT NULL,
-	Weight FLOAT NOT NULL CHECK (Weight > 0),
-	UNIQUE(name)
+	weight FLOAT NOT NULL CHECK (Weight > 0),
+
+	UNIQUE(name, weight)
 );
 
 CREATE TABLE shipments (
@@ -25,17 +30,6 @@ CREATE TABLE shipments (
 
 	FOREIGN KEY (sid) REFERENCES suppliers(id),
 	FOREIGN KEY (pid) REFERENCES parts(id)
-);
-
-CREATE TABLE addresses (
-	id INT(10) AUTO_INCREMENT PRIMARY KEY,
-	sid INT(10) NOT NULL,
-	city VARCHAR(20) NOT NULL,
-	address VARCHAR(20) NOT NULL,
-
-	UNIQUE(sid, city, address),
-
-	FOREIGN KEY (sid) REFERENCES suppliers(id)
 );
 
 CREATE TABLE updates (
