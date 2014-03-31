@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 require 'mysql'
-# require 'sqlite3'
+require 'sqlite3'
 require 'thread'
 require 'bigdecimal'
 
@@ -52,9 +52,6 @@ class Company
 		puts "Values for #{@affiliate_id} affiliate added to warehouse: suppliers (#{@last_s}, #{@max_s}), parts (#{@last_p}, #{@max_p}), relations (#{@last_sp}, #{@max_sp})"
 	end
 
-	###
-	### Transform methods
-	###
 	protected
 	def create_suppliers()
 		return if @suppliers.empty?
@@ -168,10 +165,6 @@ class AffiliateOne < Company
 		@con.close if @con
 	end
 
-	###
-	### Extraction methods
-	###
-
 	protected
 	def extract_max_ids()
 		begin
@@ -284,30 +277,112 @@ class AffiliateTwo < Company
 
 	protected
 	def create_connection()
+		begin
+			@con = SQLite3::Database.new "company.db"
+			@con.results_as_hash = true
+		rescue SQLite3::Exception => e
+			puts e
+			self.close_connection
+		end		
 	end
 
 	protected
 	def close_connection()
+		@con.close if @con
 	end
-
-	###
-	### Extraction methods
-	###
 
 	protected
 	def extract_max_ids()
+		begin
+			@con.execute("SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
+			FROM \
+			(SELECT MAX(SID) AS max_id FROM S) s \
+			JOIN (SELECT MAX(PID) AS max_id FROM P) p \
+			JOIN (SELECT MAX(SPID) AS max_id FROM SP) sp") do |row|
+				@max_s = row['SID'] unless row['SID'] == nil
+				@max_p = row['PID'] unless row['PID'] == nil
+				@max_sp = row['SPID'] unless row['SPID'] == nil
+			end
+		rescue SQLite3::Exception => e
+			puts e
+			self.close_connection
+		end
 	end
 
 	protected
 	def extract_suppliers()
+		begin
+			@suppliers = Array.new
+			@con.execute("SELECT * FROM S \
+			WHERE SID BETWEEN #{@last_s} + 1 AND #{@max_s} AND \
+			SName IS NOT NULL AND \
+			SCity IS NOT NULL AND \
+			Address IS NOT NULL") do |row|
+				@suppliers << {:name => row["SName"], :city => row["SCity"], :address => row["Address"]}
+			end
+		rescue SQLite3::Exception => e
+			puts e
+			self.close_connection
+		end
 	end
 
 	protected
 	def extract_parts()
+		begin
+			@parts = Array.new
+			@con.execute("SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
+			WHERE PID BETWEEN #{@last_p} + 1 AND #{@max_p} AND
+			PName IS NOT NULL AND \
+			Weight > 0") do |row|
+				@parts << {:name => row["PName"], :htp => row["HTP"], :weight => row["Weight"]}
+			end
+		rescue SQLite3::Exception => e
+			puts e
+			self.close_connection
+		end
 	end
 	
 	protected
 	def extract_shipments()
+		begin
+			@shipments = Array.new
+			@con.execute("SELECT \
+				S.SName AS Supplier, \
+				S.Address AS Address, \
+				S.SCity AS City, \
+				P.PName AS Part, \
+				CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
+				SP.Qty AS Quantity, \
+				UNIX_TIMESTAMP(SP.OrderDate) AS OrderDate, \
+				SP.Period AS Period, \
+				UNIX_TIMESTAMP(SP.ShipDate) AS ShipDate, \
+				SP.Price AS Price, \
+				P.Weight * SP.Qty AS SPWeight \
+			FROM SP \
+			INNER JOIN S ON S.SID = SP.SID \
+			INNER JOIN P ON P.PID = SP.PID \
+			WHERE \
+				SP.SPID BETWEEN #{@last_sp} + 1 AND #{@max_sp} AND \
+				S.SName IS NOT NULL AND \
+				S.SCity IS NOT NULL AND \
+				S.Address IS NOT NULL AND \
+				P.PName IS NOT NULL AND \
+				P.Weight > 0 AND \
+				SP.OrderDate IS NOT NULL AND \
+				SP.Qty > 0 AND \
+				SP.Price > 0 AND \
+				SP.Period >= 0 AND \
+				SP.OrderDate <= SP.ShipDate \
+			HAVING SPWeight BETWEEN 0 AND 1500") do |row|
+				@shipments << {:supplier => row["Supplier"], :city => row["City"], :address => row["Address"], :supplier_id => 0,
+							:part => row["Part"], :part_weight => row["PartWeight"], :qty => row["Quantity"], :part_id => 0,
+							:order_date => row["OrderDate"], :ship_date => row["ShipDate"], :period => row["Period"], 
+							:weight => row["SPWeight"], :price => row["Price"]}
+			end
+		rescue SQLite3::Exception => e 	
+   			puts e
+   			self.close_connection
+   		end
 	end
 end
 
@@ -315,7 +390,8 @@ begin
 	puts 'Start ETL process'
 
 	databases = [
-		AffiliateOne
+		AffiliateOne,
+		AffiliateTwo
 	]
 
 	last_ids = Array.new(databases.count) {{:last_sid => 1, :last_pid => 1, :last_spid => 1}}
