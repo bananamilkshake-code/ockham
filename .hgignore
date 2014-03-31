@@ -9,3 +9,7 @@ build
 *.synctex.gz
 *.autosave
 *.pro.user
+*.csv
+*.toc
+*.pdf
+
