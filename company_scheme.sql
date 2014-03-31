@@ -1,0 +1,28 @@
+CREATE TABLE P (
+  PID int PRIMARY KEY,
+  PName varchar DEFAULT NULL,
+  HTP tinyint DEFAULT NULL,
+  Weight float DEFAULT NULL
+);
+
+CREATE TABLE S (
+  SID int PRIMARY KEY,
+  SName varchar DEFAULT NULL,
+  SCity varchar DEFAULT NULL,
+  Address varchar DEFAULT NULL,
+  Risk tinyint DEFAULT NULL
+);
+
+CREATE TABLE SP (
+  SPID int PRIMARY KEY,
+  SID int DEFAULT NULL,
+  PID int DEFAULT NULL,
+  Qty int DEFAULT NULL,
+  Price float DEFAULT NULL,
+  OrderDate date DEFAULT NULL,
+  Period int DEFAULT NULL,
+  ShipDate date DEFAULT NULL,
+  FOREIGN KEY (SID) REFERENCES S (SID) ON DELETE SET NULL,
+  FOREIGN KEY (PID) REFERENCES P (PID) ON DELETE SET NULL
+);
+
