@@ -218,14 +218,102 @@ Transform, Load)}, поскольку данный процесс осущест
 
 \section{Проектирование}
 \subsection{Схема хранилища данных}
-На рис. \par{etl-diagram} изображена таблицы хранилища данных, связи между ними и типы связей.
+Хранилище данных основано на СУБД MySQL. На рис. \pic{etl-diagram} изображена схема таблицы хранилища данных, связи между ними и типы связей.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[scale=0.5]{etl-diagram.png}
+  \includegraphics[scale=0.8]{etl-diagram.png}
   \caption{Сема хранилища данных}
   \label{etl-diagram}
 \end{figure}
+
+В таблице \tab{etl-suppliers} представлено описание таблицы Поставщики.
+\begin{table}[h]
+	\caption{\space Описание таблицы хранилища Поставщики (suppliers)}
+	\label{etl-suppliers}
+	\begin{tabular}{|p{0.4cm}|p{2.5cm}|p{1.5cm}|p{6.3cm}|p{3.2cm}|}
+		\hline
+		\textbf{№} & \textbf{Атрибут} & \textbf{Ключ} & \textbf{Семантика} & \textbf{Тип данных} \\
+		\hline
+		1. & id & * & Уникальный код поставщика в хранилище & INT(10) \\
+		\hline
+		2. & name & & Имя поставщика & VARCHAR(20) \\
+		\hline
+		3. & city & & Город поставщика & VARCHAR(20) \\
+		\hline
+		4. & address & & Адрес поставщика & VARCHAR(20) \\
+		\hline
+		5. & risk & & Риск поставщика & TINYINT(2) \\
+		\hline
+	\end{tabular}
+\end{table}
+
+В таблице \tab{etl-parts} представлено описание таблицы Детали.
+\begin{table}[h]
+	\caption{\space Описание таблицы хранилища Детали (details)}
+	\label{etl-parts}
+	\begin{tabular}{|p{0.4cm}|p{2.5cm}|p{1.5cm}|p{6.3cm}|p{3.2cm}|}
+		\hline
+		\textbf{№} & \textbf{Атрибут} & \textbf{Ключ} & \textbf{Семантика} & \textbf{Тип данных} \\
+		\hline
+		1. & id & * & Уникальный код детали в хранилище & INT (10) \\
+		\hline
+		2. & name & & Название детали & VARCHAR(20) \\
+		\hline
+		3. & HTP & & Относится ли деталь к продуктам высоких технологий & TINYINT(1) \\
+		\hline
+		4. & Weight & & Вес детали & FLOAT \\
+		\hline
+	\end{tabular}
+\end{table}
+
+В таблице \tab{etl-shipments} представлено описание таблицы Поставки.
+\begin{table}[h]
+	\caption{\space Описание таблицы хранилища Поставки (shipments)}
+	\label{etl-shipments}
+	\begin{tabular}{|p{0.4cm}|p{2.5cm}|p{1.5cm}|p{6.3cm}|p{3.2cm}|}
+		\hline
+		\textbf{№} & \textbf{Атрибут} & \textbf{Ключ} & \textbf{Семантика} & \textbf{Тип данных} \\
+		\hline
+		1. & sid & & Уникальный код поставщика в хранилище & INT(10) \\
+		\hline
+		2. & pid & & Уникальный код детали в хранилище & INT(10) \\
+		\hline
+		3. & qty & & Количество деталей в поставке & SMALLINT \\
+		\hline
+		4. & price & & Цена поставки & SMALLINT \\
+		\hline
+		5. & weight & & Вес поставки & FLOAT \\
+		\hline
+		6. & order\_date & & Дата заказа поставки & INT(10) \\
+		\hline
+		7. & period & & Время поставки & TINYINT(3) \\
+		\hline
+		8. & ship\_date & & Дата поставки & INT(10) \\
+		\hline
+	\end{tabular}
+\end{table}
+
+В таблице \tab{etl-updates} представлено описание таблицы Обновления, в которой содержится информация о том, какие данные были загружены из филлиалов.
+\begin{table}[h]
+	\caption{\space Описание таблицы хранилища Обновления (updates)}
+	\label{etl-updates}
+	\begin{tabular}{|p{0.4cm}|p{2.5cm}|p{1.5cm}|p{6.3cm}|p{3.2cm}|}
+		\hline
+		\textbf{№} & \textbf{Атрибут} & \textbf{Ключ} & \textbf{Семантика} & \textbf{Тип данных} \\
+		\hline
+		1. & time & & Время обновления & INT (10) \\
+		\hline
+		2. & affiliate\_id & & Номер филлиала & SMALLINT(5) \\
+		\hline
+		4. & S & & Последний id поставщика в филлиале affiliate\_id, который был добавлен при добавлении & INT(10) \\
+		\hline
+		5. & P & & Последний id детали в филлиале affiliate\_id, который был добавлен при добавлении & INT(10) \\
+		\hline
+		6. & SP & & Последний id поставки в филлиале affiliate\_id, который был добавлен при добавлении & INT(10) \\
+		\hline
+	\end{tabular}
+\end{table}
 
 \subsection{ETL}
 \subsection{Функции OLAP}
