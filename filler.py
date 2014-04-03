@@ -74,7 +74,7 @@ def gen_unixtimestamp(begin=0, delta=0, error=0):
 	return calendar.timegm(date.utctimetuple())
 
 def gen_int(range_l, range_r, error=0):
-	result = random.randrange(range_l, range_r)
+	result = random.randrange(range_l, range_r+1)
 	if is_error(error):
 		error_int(result)
 	return result
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 		name = gen_supplier_name()
 		city = gen_city(error)
 		address = gen_address(error)
-		risk = gen_int(0, 1, error)
+		risk = gen_int(1, 3, error)
 		supplier_file.write("%i,\"%s\",\"%s\",\"%s\",%i\n" % (i, name, city, address, risk))
 	supplier_file.close()
 
