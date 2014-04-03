@@ -7,6 +7,8 @@
 
 #include <QMessageBox>
 
+#include "etl.h"
+
 const QStringList MainWindow::DIMENSIONS =
 {
 	"Time",
@@ -55,6 +57,12 @@ void MainWindow::set_olap_dimensions()
 void MainWindow::perform_etl()
 {
 	this->ui->text_etl_process->insertPlainText("Start ETL process\n");
+
+	auto success = ETL::run();
+	if (!success)
+		this->ui->text_etl_process->insertPlainText("Error on ETL performance: check script path to \"etl.rb\"\n");
+	else
+		this->ui->text_etl_process->insertPlainText("End ETL process\n");
 }
 
 void MainWindow::update_olap_combos(uint8_t combo_semantic, int index)
@@ -113,6 +121,8 @@ void MainWindow::update_etl_schedule(std::string options) const
 		error_statement.exec();
 		return;
 	}
+
+	ETL::set_cron(options);
 }
 
 void MainWindow::on_combo_x_currentIndexChanged(int index)
