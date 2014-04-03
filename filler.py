@@ -79,8 +79,8 @@ def gen_int(range_l, range_r, error=0):
 		error_int(result)
 	return result
 
-def gen_float(range_l, range_r, error=0):
-	result = random.uniform(range_l, range_r)
+def gen_float(range_l, range_r, decimal, error=0):
+	result = decimal * random.uniform(range_l, range_r)
 	if is_error(error):
 		error_int(result)
 	return result
@@ -204,7 +204,7 @@ if __name__ == '__main__':
 	for i in range(args.part_quantity):
 		name = gen_part_name()
 		htp = gen_int(0, 1)
-		weight = gen_float(0.1, 1.5, error)
+		weight = gen_float(0.1, 1.5, 100, error)
 		part_file.write("%i,\"%s\",%i,%f\n" % (i, name, htp, weight))
 	part_file.close()
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
 		sid = random.randrange(1, args.supplier_quantity)
 		pid = random.randrange(1, args.part_quantity)
 		qty = gen_int(1, 100, error)
-		price = gen_float(0.1, 10000, error)
+		price = gen_float(0.1, 10000, 100, error)
 		order_date = gen_unixtimestamp()
 		period = gen_int(10, 60)
 		ship_date = gen_unixtimestamp(order_date, period, error)
