@@ -65,13 +65,11 @@ def gen_unixtimestamp(begin=0, delta=0, error=0):
 		month = random.choice(range(1, 12))
 		day = random.choice(range(1, 28))
 
-		date = datetime.datetime(year, month, day)
+		date = datetime.datetime(year, month, day).date()
 	else:
-		start = datetime.datetime.fromtimestamp(begin)
+		date = (datetime.datetime(begin.year, begin.month, begin.day) + datetime.timedelta(days=delta + random.randrange(0, 30))).date()
 
-		date = datetime.datetime(start.year, start.month, start.day) + datetime.timedelta(days=delta + random.randrange(0, 30))
-
-	return calendar.timegm(date.utctimetuple())
+	return date
 
 def gen_int(range_l, range_r, error=0):
 	result = random.randrange(range_l, range_r+1)
@@ -219,5 +217,5 @@ if __name__ == '__main__':
 		period = gen_int(10, 60)
 		ship_date = gen_unixtimestamp(order_date, period, error)
 		period = period + gen_int(0, period, error)
-		relation_file.write("%i,%i,%i,%i,%f,\"%s\",%i,%s\n" % (i, sid, pid, qty, price, order_date, period, ship_date))
+		relation_file.write("%i,%i,%i,%i,%f,\"%s\",%i,\"%s\"\n" % (i, sid, pid, qty, price, order_date, period, ship_date))
 	relation_file.close()
