@@ -37,21 +37,23 @@ OLAP::~OLAP()
 	mysql_close(this->connection);
 }
 
-OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Type dim_2, uint8_t detalisation_2, OLAP::Type dim_3, uint8_t detalisation_3)
+OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Type dim_2, uint8_t detalisation_2, OLAP::Type dim_3, uint8_t detalisation_3, std::string dim_z_value)
 {
-	std::string row_name_1 = "";
-	std::string row_name_2 = "";
-	std::string row_name_3 = "";
+	std::string row_name_1 = ROW_NAMES[dim_1][detalisation_1];
+	std::string row_name_2 = ROW_NAMES[dim_2][detalisation_2];
+	std::string row_name_3 = ROW_NAMES[dim_3][detalisation_3];
 
 	std::stringstream cube_query;
 	cube_query << "SELECT " <<
-		row_name_1 << " AS dim_1 " <<
-		row_name_2 << " AS dim_2 " <<
-		row_name_3 << " AS dim_3 " <<
-		 "FROM shipments sp "
-		 "INNER JOIN suppliers s ON s.id = sp.sid "
-		 "INNER JOIN parts s ON p.id = sp.pid "
-		 "GROUP BY dim_1, dim_2, dim_3 WITH ROLLUP";
+		row_name_1 << " AS dim_1," <<
+		row_name_2 << " AS dim_2," <<
+		row_name_3 << " AS dim_3, " <<
+		"SUM(sp.price) "
+		"FROM shipments sp "
+		"INNER JOIN suppliers s ON s.id = sp.sid "
+		"INNER JOIN parts p ON p.id = sp.pid "
+		"WHERE " << row_name_3 << " = \"" << dim_z_value << "\" "
+		"GROUP BY dim_1, dim_2, dim_3 WITH ROLLUP";
 
 	if (mysql_query(this->connection, cube_query.str().c_str()))
 		return cube_t();
@@ -66,7 +68,24 @@ const QStringList& OLAP::get_values_list(OLAP::Type dimension, uint8_t detalisat
 
 OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 {
-	return cube_t();
+	if (!result)
+		return cube_t();
+
+	cube_t cube;
+
+	MYSQL_ROW row;
+	while (row = mysql_fetch_row(result))
+	{
+		std::string dim_1(row[0] ? std::string(row[0]) : "NULL");
+		std::string dim_2(row[1] ? std::string(row[1]) : "NULL");
+		std::string dim_3(row[2] ? std::string(row[2]) : "NULL");
+
+		auto value = atof(row[3]);
+
+		cube[dim_1][dim_2][dim_3] = value;
+	}
+
+	return cube;
 }
 
 void OLAP::fill_values()

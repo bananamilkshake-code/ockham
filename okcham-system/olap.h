@@ -23,12 +23,12 @@ public:
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
 
-	typedef std::map<std::string, std::map<std::string, std::map<std::string, float>>> cube_t;
+	typedef std::map<std::string, std::map<std::string, std::map<std::string, double>>> cube_t;
 
 	OLAP();
 	~OLAP();
 
-	cube_t calculate(Type dim_1, uint8_t detalization_1, Type dim_2, uint8_t detalization_2, Type dim_3, uint8_t detalization_3);
+	cube_t calculate(Type dim_1, uint8_t detalization_1, Type dim_2, uint8_t detalization_2, Type dim_3, uint8_t detalization_3, std::string dim_z_value);
 
 	void fill_values();
 

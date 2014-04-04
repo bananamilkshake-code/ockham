@@ -177,7 +177,7 @@ void MainWindow::on_button_olap_clicked()
 	uint8_t dim_3 = DIMENSIONS.indexOf(this->ui->label_z->text());
 	uint8_t detalisation_3 = this->ui->combo_detalisation_3->currentIndex();
 
-	auto cube = this->olap.calculate(OLAP::Type(dim_1), detalisation_1, OLAP::Type(dim_2), detalisation_2, OLAP::Type(dim_3), detalisation_3);
+	auto cube = this->olap.calculate(OLAP::Type(dim_1), detalisation_1, OLAP::Type(dim_2), detalisation_2, OLAP::Type(dim_3), detalisation_3, this->ui->combo_z_value->currentText().toUtf8().constData());
 	this->fill_olap_cube(cube);
 }
 
