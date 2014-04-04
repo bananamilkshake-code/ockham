@@ -31,6 +31,8 @@ private slots:
 	void on_button_classify_clicked();
 	void on_button_clasterize_clicked();
 
+	void on_combo_detalisation_3_currentIndexChanged(int index);
+
 private:
 	Ui::MainWindow *ui;
 	OLAP olap;

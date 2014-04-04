@@ -199,5 +199,14 @@ void MainWindow::fill_z_values()
 	uint8_t dimension = this->get_z_dimension();
 	uint8_t detalisation = this->ui->combo_detalisation_3->currentIndex();
 
+	if (dimension >= DIMENSIONS.size() || detalisation > OLAP::DETALIZATION[dimension].size())
+		return;
+
+	this->ui->combo_z_value->clear();
 	this->ui->combo_z_value->addItems(this->olap.get_values_list(OLAP::Type(dimension), detalisation));
+}
+
+void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)
+{
+	this->fill_z_values();
 }

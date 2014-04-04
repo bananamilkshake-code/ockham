@@ -14,9 +14,12 @@ const QStringList OLAP::DETALIZATION[] =
 
 const std::vector<std::vector<std::string>> OLAP::ROW_NAMES =
 {
-	{"YEAR(sp.order_date)", "DATE_FORMAT(sp.order_date, %M, %Y)"},	// TIME
-	{"s.city", "s.name"},						// PLACE
-	{"p.htp", "p.name"}						// DETAIL
+	{			// TIME
+		"YEAR(sp.order_date)",
+		"DATE_FORMAT(sp.order_date, \"%M, %Y\")"
+	},
+	{"s.city", "s.name"},	// PLACE
+	{"p.htp", "p.name"}	// DETAIL
 };
 
 OLAP::OLAP()
@@ -68,6 +71,13 @@ OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 
 void OLAP::fill_values()
 {
+	static const std::vector<std::string> TABLE_NAMES =
+	{
+		"shipments sp",
+		"suppliers s",
+		"parts p"
+	};
+
 	this->lists.clear();
 
 	for (uint8_t type = 0; type < ROW_NAMES.size(); type++)
@@ -75,7 +85,21 @@ void OLAP::fill_values()
 		this->lists.push_back(std::vector<QStringList>());
 		for (uint8_t detalisation = 0; detalisation < ROW_NAMES[type].size(); detalisation++)
 		{
-			this->lists[type].push_back(QStringList());
+			std::stringstream query;
+			query << "SELECT " << ROW_NAMES[type][detalisation] << " AS param FROM " << TABLE_NAMES[type] << " GROUP BY param";
+
+			mysql_query(this->connection, query.str().c_str());
+			auto res = mysql_store_result(this->connection);
+
+			QStringList values;
+			if (res)
+			{
+				MYSQL_ROW row;
+				while (row = mysql_fetch_row(res))
+					values.append(row[0]);
+			}
+
+			this->lists[type].push_back(values);
 		}
 	}
 }
