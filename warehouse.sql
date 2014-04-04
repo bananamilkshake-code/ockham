@@ -23,9 +23,9 @@ CREATE TABLE shipments (
 	qty SMALLINT NOT NULL CHECK (qty > 0),
 	price SMALLINT NOT NULL CHECK (price > 0),
 	weight SMALLINT NOT NULL CHECK (weight > 0 AND weight <= 1500),
-	order_date INT(10) NOT NULL,
+	order_date DATE NOT NULL,
 	period TINYINT(3) NOT NULL CHECK(period > 0),
-	ship_date INT(10) NOT NULL CHECK(ship_date <= order_date),
+	ship_date DATE NOT NULL CHECK(ship_date <= order_date),
 
 	FOREIGN KEY (sid) REFERENCES suppliers(id),
 	FOREIGN KEY (pid) REFERENCES parts(id)
