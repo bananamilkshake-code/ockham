@@ -66,6 +66,8 @@ void MainWindow::perform_etl()
 		this->ui->text_etl_process->insertPlainText("Error on ETL performance: check script path to \"etl.rb\"\n");
 	else
 		this->ui->text_etl_process->insertPlainText("End ETL process\n");
+
+	this->olap.fill_values();
 }
 
 void MainWindow::update_olap_combos(uint8_t combo_semantic, int index)
@@ -81,9 +83,7 @@ void MainWindow::update_olap_combos(uint8_t combo_semantic, int index)
 	if (dim_x == -1 || dim_y == -1)
 		return;
 
-	uint8_t dim_z = 0;
-	while (dim_z == dim_x || dim_z == dim_y)
-		dim_z++;
+	uint8_t dim_z = this->get_z_dimension();
 
 	this->ui->label_z->setText(DIMENSIONS.at(dim_z));
 
@@ -94,6 +94,8 @@ void MainWindow::update_olap_combos(uint8_t combo_semantic, int index)
 	this->ui->combo_detalisation_1->addItems(OLAP::DETALIZATION[dim_x]);
 	this->ui->combo_detalisation_2->addItems(OLAP::DETALIZATION[dim_y]);
 	this->ui->combo_detalisation_3->addItems(OLAP::DETALIZATION[dim_z]);
+
+	this->fill_z_values();
 }
 
 static constexpr int8_t EVERY = -1;
@@ -125,6 +127,18 @@ std::string MainWindow::get_cron_parameters() const
 std::string MainWindow::get_cron_statement() const
 {
 	return this->ui->line_cron->text().toUtf8().constData();
+}
+
+uint8_t MainWindow::get_z_dimension() const
+{
+	uint8_t dim_x = this->ui->combo_x->currentIndex();
+	uint8_t dim_y = this->ui->combo_y->currentIndex();
+
+	uint8_t dim_z = 0;
+	while (dim_z == dim_x || dim_z == dim_y)
+		dim_z++;
+
+	return dim_z;
 }
 
 void MainWindow::update_etl_schedule(std::string options) const
@@ -178,4 +192,12 @@ void MainWindow::on_button_clasterize_clicked()
 void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 {
 
+}
+
+void MainWindow::fill_z_values()
+{
+	uint8_t dimension = this->get_z_dimension();
+	uint8_t detalisation = this->ui->combo_detalisation_3->currentIndex();
+
+	this->ui->combo_z_value->addItems(this->olap.get_values_list(OLAP::Type(dimension), detalisation));
 }

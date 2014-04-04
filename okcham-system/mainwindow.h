@@ -40,9 +40,12 @@ private:
 	void perform_etl();
 	void update_olap_combos(uint8_t combo_semantic, int index);
 	void fill_olap_cube(OLAP::cube_t cube);
+	void fill_z_values();
 
 	std::string get_cron_parameters() const;
 	std::string get_cron_statement() const;
+
+	uint8_t get_z_dimension() const;
 
 	void update_etl_schedule(std::string options) const;
 };

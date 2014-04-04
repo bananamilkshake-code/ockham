@@ -25,6 +25,8 @@ OLAP::OLAP()
 
 	bool connection_succeed = mysql_real_connect(this->connection, DB_HOST, DB_USER, DB_PASSWORD, DB_TABLE, 0, nullptr, 0);
 	assert(connection_succeed);
+
+	this->fill_values();
 }
 
 OLAP::~OLAP()
@@ -54,43 +56,26 @@ OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Typ
 	return this->convert_result(mysql_use_result(this->connection));
 }
 
-OLAP::values_list_t OLAP::get_suppliers() const
+const QStringList& OLAP::get_values_list(OLAP::Type dimension, uint8_t detalisation)
 {
-	values_list_t values;
-	return values;
-}
-
-OLAP::values_list_t OLAP::get_cities() const
-{
-	values_list_t values;
-	return values;
-}
-
-OLAP::values_list_t OLAP::get_details() const
-{
-	values_list_t values;
-	return values;
-}
-
-OLAP::values_list_t OLAP::get_htp() const
-{
-	values_list_t values;
-	return values;
-}
-
-OLAP::values_list_t OLAP::get_years() const
-{
-	values_list_t values;
-	return values;
-}
-
-OLAP::values_list_t OLAP::get_monthes() const
-{
-	values_list_t values;
-	return values;
+	return this->lists[dimension][detalisation];
 }
 
 OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 {
 	return cube_t();
+}
+
+void OLAP::fill_values()
+{
+	this->lists.clear();
+
+	for (uint8_t type = 0; type < ROW_NAMES.size(); type++)
+	{
+		this->lists.push_back(std::vector<QStringList>());
+		for (uint8_t detalisation = 0; detalisation < ROW_NAMES[type].size(); detalisation++)
+		{
+			this->lists[type].push_back(QStringList());
+		}
+	}
 }
