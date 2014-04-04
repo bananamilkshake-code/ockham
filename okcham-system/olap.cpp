@@ -27,9 +27,10 @@ const std::string OLAP::ALL = "NULL";
 OLAP::OLAP()
 {
 	this->connection = mysql_init(nullptr);
-
 	bool connection_succeed = mysql_real_connect(this->connection, DB_HOST, DB_USER, DB_PASSWORD, DB_TABLE, 0, nullptr, 0);
 	assert(connection_succeed);
+
+	mysql_set_character_set(this->connection, "utf8");
 
 	this->fill_values();
 }

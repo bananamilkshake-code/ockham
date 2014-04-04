@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include <QMessageBox>
+#include <QTextCodec>
 
 #include "etl.h"
 
@@ -22,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow),
 	olap(OLAP())
 {
+	QTextCodec::setCodecForLocale(QTextCodec::codecForName("Windows-1251"));
+
 	ui->setupUi(this);
 
 	this->set_olap_dimensions();
@@ -52,7 +55,7 @@ void MainWindow::add_col(QTableWidget *table, std::string header)
 	auto col_count = table->columnCount();
 	table->setColumnCount(col_count + 1);
 
-	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(),QTableWidgetItem::Type);
+	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(), QTableWidgetItem::Type);
 	table->setHorizontalHeaderItem(col_count, header_item);
 }
 
@@ -61,7 +64,7 @@ void MainWindow::add_row(QTableWidget *table, std::string header)
 	auto row_count = table->rowCount();
 	table->setRowCount(row_count + 1);
 
-	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(),QTableWidgetItem::Type);
+	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(), QTableWidgetItem::Type);
 	table->setVerticalHeaderItem(row_count, header_item);
 }
 
