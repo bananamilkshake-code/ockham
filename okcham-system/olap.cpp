@@ -22,6 +22,8 @@ const std::vector<std::vector<std::string>> OLAP::ROW_NAMES =
 	{"p.htp", "p.name"}	// DETAIL
 };
 
+const std::string OLAP::ALL = "NULL";
+
 OLAP::OLAP()
 {
 	this->connection = mysql_init(nullptr);

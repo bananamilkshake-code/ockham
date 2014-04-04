@@ -5,6 +5,8 @@
 
 #include "olap.h"
 
+class QTableWidget;
+
 namespace Ui {
 class MainWindow;
 }
@@ -36,6 +38,9 @@ private slots:
 private:
 	Ui::MainWindow *ui;
 	OLAP olap;
+
+	void add_col(QTableWidget *table, std::string header);
+	void add_row(QTableWidget *table, std::string header);
 
 	void set_olap_dimensions();
 

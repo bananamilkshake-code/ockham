@@ -47,6 +47,24 @@ void MainWindow::on_button_run_ETL_clicked()
 	this->perform_etl();
 }
 
+void MainWindow::add_col(QTableWidget *table, std::string header)
+{
+	auto col_count = table->columnCount();
+	table->setColumnCount(col_count + 1);
+
+	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(),QTableWidgetItem::Type);
+	table->setHorizontalHeaderItem(col_count, header_item);
+}
+
+void MainWindow::add_row(QTableWidget *table, std::string header)
+{
+	auto row_count = table->rowCount();
+	table->setRowCount(row_count + 1);
+
+	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(),QTableWidgetItem::Type);
+	table->setVerticalHeaderItem(row_count, header_item);
+}
+
 void MainWindow::set_olap_dimensions()
 {
 	this->ui->combo_x->addItems(DIMENSIONS);
@@ -193,41 +211,35 @@ void MainWindow::on_button_clasterize_clicked()
 void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 {
 	auto table = this->ui->table_olap;
-	table->setColumnCount(1);
-	table->setRowCount(1);
 
 	std::unordered_set<std::string> values_list;
-
-	auto row_id = 0;
-	auto col_id = 0;
 
 	for (auto col : cube)
 	{
 		auto row = col.second;
 
 		auto col_header = col.first;
-		if (col_header !=  "NULL")
-		{
-			table->setColumnCount(col_id + 1);
-			QTableWidgetItem* header_item = new QTableWidgetItem(col_header.c_str(),QTableWidgetItem::Type);
-			table->setHorizontalHeaderItem(col_id++, header_item);
-		}
+		if (col_header !=  OLAP::ALL)
+			this->add_col(table, col_header);
 
 		for (auto record : row)
 		{
 			auto row_header = record.first;
-			if (row_header == "NULL")
+			if (row_header == OLAP::ALL)
 				continue;
 
-			if (!values_list.insert(row_header).second)
-				continue;
-
-			table->setRowCount(row_id + 1);
-			QTableWidgetItem* header_item = new QTableWidgetItem(row_header.c_str(),QTableWidgetItem::Type);
-			table->setVerticalHeaderItem(row_id++, header_item);
+			if (values_list.insert(row_header).second)
+				this->add_row(table, row_header);
 		}
 	}
-	values_list.insert("NULL");
+
+	this->add_row(table, OLAP::ALL);
+	this->add_col(table, OLAP::ALL);
+
+	// TODO: fill cells
+
+	table->horizontalHeaderItem(table->columnCount() - 1)->setText("ALL");
+	table->verticalHeaderItem(table->rowCount() - 1)->setText("ALL");
 }
 
 void MainWindow::fill_z_values()
