@@ -45,7 +45,6 @@ class Company
 
 	def load()
 		return if @shipments_query == nil
-		puts @shipments_query
 		@storage.query(@shipments_query)
 		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@max_s}, #{@max_p}, #{@max_sp})")
 
@@ -126,6 +125,7 @@ class Company
 		end
 
 		@shipments.each do |shipment|
+			puts shipment
 			shipment[:supplier_id] = sids[shipment[:city]][shipment[:supplier]][shipment[:address]]
 			shipment[:part_id] = pids[shipment[:part]][shipment[:part_weight]]
 		end
@@ -134,8 +134,8 @@ class Company
 		@shipments.each do |shipment|
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
-								<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',' \
-								<< shipment[:order_date] << ',' << shipment[:period] << ',' << shipment[:ship_date] << ')'
+								<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',"' \
+								<< shipment[:order_date] << '",' << shipment[:period] << ',"' << shipment[:ship_date] << '")'
 		end
 
 		@shipments_query = "INSERT INTO shipments(sid, pid, qty, price, weight, order_date, period, ship_date) VALUES" + shipments_values
@@ -233,9 +233,9 @@ class AffiliateOne < Company
 					P.PName AS Part, \
 					CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
 					SP.Qty AS Quantity, \
-					UNIX_TIMESTAMP(SP.OrderDate) AS OrderDate, \
+					SP.OrderDate AS OrderDate, \
 					SP.Period AS Period, \
-					UNIX_TIMESTAMP(SP.ShipDate) AS ShipDate, \
+					SP.ShipDate AS ShipDate, \
 					SP.Price AS Price, \
 					P.Weight * SP.Qty AS SPWeight \
 				FROM SP \
@@ -353,9 +353,9 @@ class AffiliateTwo < Company
 				P.PName AS Part, \
 				CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
 				SP.Qty AS Quantity, \
-				UNIX_TIMESTAMP(SP.OrderDate) AS OrderDate, \
+				SP.OrderDate AS OrderDate, \
 				SP.Period AS Period, \
-				UNIX_TIMESTAMP(SP.ShipDate) AS ShipDate, \
+				SP.ShipDate AS ShipDate, \
 				SP.Price AS Price, \
 				P.Weight * SP.Qty AS SPWeight \
 			FROM SP \
@@ -391,10 +391,10 @@ begin
 
 	databases = [
 		AffiliateOne,
-		AffiliateTwo
+	#	AffiliateTwo
 	]
 
-	last_ids = Array.new(databases.count) {{:last_sid => 1, :last_pid => 1, :last_spid => 1}}
+	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
 
 	storage = Mysql.init
 	storage.options(Mysql::SET_CHARSET_NAME, 'utf8')
