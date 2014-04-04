@@ -7,7 +7,6 @@
 #include <unordered_set>
 
 #include <QMessageBox>
-#include <QTextCodec>
 
 #include "etl.h"
 
@@ -23,8 +22,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow),
 	olap(OLAP())
 {
-	QTextCodec::setCodecForLocale(QTextCodec::codecForName("Windows-1251"));
-
 	ui->setupUi(this);
 
 	this->set_olap_dimensions();
