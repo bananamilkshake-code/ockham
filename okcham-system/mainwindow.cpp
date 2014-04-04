@@ -236,10 +236,26 @@ void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 	this->add_row(table, OLAP::ALL);
 	this->add_col(table, OLAP::ALL);
 
-	// TODO: fill cells
+	auto col_count = table->columnCount();
+	auto row_count = table->rowCount();
 
-	table->horizontalHeaderItem(table->columnCount() - 1)->setText("ALL");
-	table->verticalHeaderItem(table->rowCount() - 1)->setText("ALL");
+	for (auto col = 0; col < col_count; col++)
+	{
+		std::string col_text = table->horizontalHeaderItem(col)->text().toStdString();
+		for (auto row = 0; row < row_count; row++)
+		{
+			std::string row_text = table->verticalHeaderItem(row)->text().toStdString();
+			std::string value = cube[col_text][row_text];
+			if (value.length() == 0)
+				value = "0";
+
+			table->setItem(row, col, new QTableWidgetItem());
+			table->item(row, col)->setText(value.c_str());
+		}
+	}
+
+	table->horizontalHeaderItem(col_count- 1)->setText("ALL");
+	table->verticalHeaderItem(row_count - 1)->setText("ALL");
 }
 
 void MainWindow::fill_z_values()

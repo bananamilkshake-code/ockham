@@ -20,7 +20,7 @@ public:
 		DETAIL
 	};
 
-	typedef std::map<std::string, std::map<std::string, double>> cube_t;
+	typedef std::map<std::string, std::map<std::string, std::string>> cube_t;
 
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
