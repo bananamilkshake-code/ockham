@@ -308,9 +308,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>40</y>
+        <y>90</y>
         <width>641</width>
-        <height>481</height>
+        <height>431</height>
        </rect>
       </property>
      </widget>
@@ -332,15 +332,18 @@
        <rect>
         <x>30</x>
         <y>10</y>
-        <width>81</width>
+        <width>91</width>
         <height>23</height>
        </rect>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
       </property>
      </widget>
      <widget class="QLabel" name="label_y">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>130</x>
         <y>10</y>
         <width>16</width>
         <height>16</height>
@@ -353,11 +356,14 @@
      <widget class="QComboBox" name="combo_y">
       <property name="geometry">
        <rect>
-        <x>140</x>
+        <x>150</x>
         <y>10</y>
         <width>91</width>
         <height>23</height>
        </rect>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
       </property>
      </widget>
      <widget class="QComboBox" name="combo_z_value">
@@ -394,6 +400,49 @@
       </property>
       <property name="text">
        <string>Start</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_detalisation">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Detalisation:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="combo_detalisation_1">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>60</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="combo_detalisation_2">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>60</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="combo_detalisation_3">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>60</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
       </property>
      </widget>
     </widget>

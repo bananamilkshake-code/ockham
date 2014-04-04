@@ -52,6 +52,8 @@ void MainWindow::set_olap_dimensions()
 	this->ui->combo_y->addItems(DIMENSIONS);
 
 	this->ui->combo_x->setCurrentIndex(0);
+	this->ui->combo_y->setCurrentIndex(1);
+
 	this->update_olap_combos('x', 0);
 }
 
@@ -73,11 +75,25 @@ void MainWindow::update_olap_combos(uint8_t combo_semantic, int index)
 	if (other_combo->currentIndex() == index)
 		other_combo->setCurrentIndex((index + 1) % DIMENSIONS.size());
 
-	uint8_t z_dimension = 0;
-	while (z_dimension == this->ui->combo_x->currentIndex() || z_dimension == this->ui->combo_y->currentIndex())
-		z_dimension++;
+	auto dim_x = this->ui->combo_x->currentIndex();
+	auto dim_y = this->ui->combo_y->currentIndex();
 
-	this->ui->label_z->setText(DIMENSIONS.at(z_dimension));
+	if (dim_x == -1 || dim_y == -1)
+		return;
+
+	uint8_t dim_z = 0;
+	while (dim_z == dim_x || dim_z == dim_y)
+		dim_z++;
+
+	this->ui->label_z->setText(DIMENSIONS.at(dim_z));
+
+	this->ui->combo_detalisation_1->clear();
+	this->ui->combo_detalisation_2->clear();
+	this->ui->combo_detalisation_3->clear();
+
+	this->ui->combo_detalisation_1->addItems(OLAP::DETALIZATION[dim_x]);
+	this->ui->combo_detalisation_2->addItems(OLAP::DETALIZATION[dim_y]);
+	this->ui->combo_detalisation_3->addItems(OLAP::DETALIZATION[dim_z]);
 }
 
 static constexpr int8_t EVERY = -1;
@@ -139,10 +155,15 @@ void MainWindow::on_combo_y_currentIndexChanged(int index)
 void MainWindow::on_button_olap_clicked()
 {
 	uint8_t dim_1 = this->ui->combo_x->currentIndex();
-	uint8_t dim_2 = this->ui->combo_y->currentIndex();
-	uint8_t dim_3 = DIMENSIONS.indexOf(this->ui->label_z->text());
+	uint8_t detalisation_1 = this->ui->combo_detalisation_1->currentIndex();
 
-	auto cube = this->olap.calculate(dim_1, dim_2, dim_3);
+	uint8_t dim_2 = this->ui->combo_y->currentIndex();
+	uint8_t detalisation_2 = this->ui->combo_detalisation_2->currentIndex();
+
+	uint8_t dim_3 = DIMENSIONS.indexOf(this->ui->label_z->text());
+	uint8_t detalisation_3 = this->ui->combo_detalisation_3->currentIndex();
+
+	auto cube = this->olap.calculate(OLAP::Type(dim_1), detalisation_1, OLAP::Type(dim_2), detalisation_2, OLAP::Type(dim_3), detalisation_3);
 	this->fill_olap_cube(cube);
 }
 
