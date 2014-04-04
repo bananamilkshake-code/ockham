@@ -34,30 +34,30 @@ def is_error(percent):
 
 # Make an error in value
 def error_line(line):
-	error_type = ["miss_char", "wrong_char", "missed_value"]
+	error_type = enum(MISS_CHAR, WRONG_CHAR, MISSED_VALUE)
 	error = random.choice(error_type)
 
 	hit = random.randint(0, len(line) - 1)
 
 	return {
-		"miss_char": line[:hit] + line[(hit+1):],
-		"wrong_char": line[:hit] + random.choice((string.letters + string.digits).replace(line[(hit):], '')),
-		"missed_value": None
+		MISS_CHAR: line[:hit] + line[(hit+1):],
+		WRONG_CHAR: line[:hit] + random.choice((string.letters + string.digits).replace(line[(hit):], '')),
+		MISSED_VALUE: None
 	}.get(error, line)
 
-def error_int(number):
-	error_type = ["too_big", "too_small", "signed", "missed_value"]
+def error_number(number):
+	error_type = enum(TOO_BIG, TOO_SMALL, SIGNED, MISSED_VALUE)
 	error = random.choice(error_type)
 
 	return {
-		"too_big": number * 100,
-		"too_small": number // 100,
-		"signed": number * (-1),
-		"missed_value": None
+		TOO_BIG: number * 100,
+		TOO_SMALL: number // 100,
+		SIGNED: number * (-1),
+		MISSED_VALUE: None
 	}.get(error, number)
 
 # Value generation
-def gen_unixtimestamp(begin=0, delta=0, error=0):
+def gen_date(begin=0, delta=0, error=0):
 	if begin == 0:
 		now = datetime.datetime.now()
 
@@ -72,15 +72,15 @@ def gen_unixtimestamp(begin=0, delta=0, error=0):
 	return date
 
 def gen_int(range_l, range_r, error=0):
-	result = random.randrange(range_l, range_r+1)
+	result = random.randrange(range_l, range_r + 1)
 	if is_error(error):
-		error_int(result)
+		error_number(result)
 	return result
 
-def gen_float(range_l, range_r, decimal, error=0):
-	result = decimal * random.uniform(range_l, range_r)
+def gen_float(range_l, range_r, error=0):
+	result = random.uniform(range_l, range_r)
 	if is_error(error):
-		error_int(result)
+		error_number(result)
 	return result
 
 # Supplier generation
@@ -202,7 +202,7 @@ if __name__ == '__main__':
 	for i in range(args.part_quantity):
 		name = gen_part_name()
 		htp = gen_int(0, 1)
-		weight = gen_float(0.1, 1.5, 100, error)
+		weight = gen_float(0.1, 1500, error)
 		part_file.write("%i,\"%s\",%i,%f\n" % (i, name, htp, weight))
 	part_file.close()
 
@@ -212,10 +212,10 @@ if __name__ == '__main__':
 		sid = random.randrange(1, args.supplier_quantity)
 		pid = random.randrange(1, args.part_quantity)
 		qty = gen_int(1, 100, error)
-		price = gen_float(0.1, 10000, 100, error)
-		order_date = gen_unixtimestamp()
+		price = gen_float(0.1, 1000, error)
+		order_date = gen_date()
 		period = gen_int(10, 60)
-		ship_date = gen_unixtimestamp(order_date, period, error)
+		ship_date = gen_date(order_date, period, error)
 		period = period + gen_int(0, period, error)
-		relation_file.write("%i,%i,%i,%i,%f,\"%s\",%i,\"%s\"\n" % (i, sid, pid, qty, price, order_date, period, ship_date))
+		relation_file.write("%i,%i,%i,%i,%f,\"%s\",%i,\"%s\"\n" % (i + 1, sid, pid, qty, price, order_date, period, ship_date))
 	relation_file.close()
