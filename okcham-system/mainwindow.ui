@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>654</width>
-    <height>614</height>
+    <height>576</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -304,16 +304,6 @@
      <attribute name="title">
       <string>OLAP</string>
      </attribute>
-     <widget class="QTableView" name="tableView">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>90</y>
-        <width>641</width>
-        <height>431</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_x">
       <property name="geometry">
        <rect>
@@ -444,6 +434,28 @@
         <height>23</height>
        </rect>
       </property>
+     </widget>
+     <widget class="QTableWidget" name="table_olap">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>631</width>
+        <height>391</height>
+       </rect>
+      </property>
+      <property name="rowCount">
+       <number>0</number>
+      </property>
+      <property name="columnCount">
+       <number>0</number>
+      </property>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
      </widget>
     </widget>
     <widget class="QWidget" name="tab">

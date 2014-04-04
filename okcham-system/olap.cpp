@@ -78,11 +78,10 @@ OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 	{
 		std::string dim_1(row[0] ? std::string(row[0]) : "NULL");
 		std::string dim_2(row[1] ? std::string(row[1]) : "NULL");
-		std::string dim_3(row[2] ? std::string(row[2]) : "NULL");
 
 		auto value = atof(row[3]);
 
-		cube[dim_1][dim_2][dim_3] = value;
+		cube[dim_1][dim_2] = value;
 	}
 
 	return cube;

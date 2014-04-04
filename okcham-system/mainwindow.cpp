@@ -4,6 +4,7 @@
 #include <array>
 #include <regex>
 #include <sstream>
+#include <unordered_set>
 
 #include <QMessageBox>
 
@@ -105,7 +106,7 @@ std::string MainWindow::get_cron_parameters() const
 {
 	std::ostringstream stream_parameters;
 
-	const int8_t time_periods[] =
+	const int time_periods[] =
 	{
 		this->ui->spin_minute->value(),
 		this->ui->spin_hour->value(),
@@ -191,7 +192,42 @@ void MainWindow::on_button_clasterize_clicked()
 
 void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 {
+	auto table = this->ui->table_olap;
+	table->setColumnCount(1);
+	table->setRowCount(1);
 
+	std::unordered_set<std::string> values_list;
+
+	auto row_id = 0;
+	auto col_id = 0;
+
+	for (auto col : cube)
+	{
+		auto row = col.second;
+
+		auto col_header = col.first;
+		if (col_header !=  "NULL")
+		{
+			table->setColumnCount(col_id + 1);
+			QTableWidgetItem* header_item = new QTableWidgetItem(col_header.c_str(),QTableWidgetItem::Type);
+			table->setHorizontalHeaderItem(col_id++, header_item);
+		}
+
+		for (auto record : row)
+		{
+			auto row_header = record.first;
+			if (row_header == "NULL")
+				continue;
+
+			if (!values_list.insert(row_header).second)
+				continue;
+
+			table->setRowCount(row_id + 1);
+			QTableWidgetItem* header_item = new QTableWidgetItem(row_header.c_str(),QTableWidgetItem::Type);
+			table->setVerticalHeaderItem(row_id++, header_item);
+		}
+	}
+	values_list.insert("NULL");
 }
 
 void MainWindow::fill_z_values()

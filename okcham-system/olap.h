@@ -23,7 +23,7 @@ public:
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
 
-	typedef std::map<std::string, std::map<std::string, std::map<std::string, double>>> cube_t;
+	typedef std::map<std::string, std::map<std::string, double>> cube_t;
 
 	OLAP();
 	~OLAP();
