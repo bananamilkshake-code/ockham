@@ -18,7 +18,8 @@ const QStringList MainWindow::DIMENSIONS =
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::MainWindow)
+	ui(new Ui::MainWindow),
+	olap(OLAP())
 {
 	ui->setupUi(this);
 
@@ -137,6 +138,12 @@ void MainWindow::on_combo_y_currentIndexChanged(int index)
 
 void MainWindow::on_button_olap_clicked()
 {
+	uint8_t dim_1 = this->ui->combo_x->currentIndex();
+	uint8_t dim_2 = this->ui->combo_y->currentIndex();
+	uint8_t dim_3 = DIMENSIONS.indexOf(this->ui->label_z->text());
+
+	auto cube = this->olap.calculate(dim_1, dim_2, dim_3);
+	this->fill_olap_cube(cube);
 }
 
 void MainWindow::on_button_classify_clicked()
@@ -145,4 +152,9 @@ void MainWindow::on_button_classify_clicked()
 
 void MainWindow::on_button_clasterize_clicked()
 {
+}
+
+void MainWindow::fill_olap_cube(OLAP::cube_t cube)
+{
+
 }

@@ -42,7 +42,7 @@
      <locale language="Russian" country="Russia"/>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_ETL">
      <attribute name="title">

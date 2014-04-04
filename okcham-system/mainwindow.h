@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "olap.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -31,11 +33,13 @@ private slots:
 
 private:
 	Ui::MainWindow *ui;
+	OLAP olap;
 
 	void set_olap_dimensions();
 
 	void perform_etl();
 	void update_olap_combos(uint8_t combo_semantic, int index);
+	void fill_olap_cube(OLAP::cube_t cube);
 
 	std::string get_cron_parameters() const;
 	std::string get_cron_statement() const;

@@ -14,11 +14,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
 	mainwindow.cpp \
-    etl.cpp
+    etl.cpp \
+    olap.cpp
 
 HEADERS  += mainwindow.h \
-    etl.h
+    etl.h \
+    olap.h \
+    mysql_connection_details.h
 
 FORMS    += mainwindow.ui
 
 QMAKE_CXXFLAGS += -std=c++0x
+
+unix|win32: LIBS += -lmysqlclient
