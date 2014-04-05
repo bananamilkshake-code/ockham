@@ -95,12 +95,29 @@ class Company
 		@storage.query(@shipments_query)
 		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@max_s}, #{@max_p}, #{@max_sp})")
 
+		@storage.query("UPDATE suppliers  \
+				INNER JOIN ( \
+					SELECT sid, COUNT( * ) AS value \
+					FROM shipments \
+					GROUP BY sid \
+					)shipments_all ON shipments_all.sid = suppliers.id \
+				LEFT JOIN ( \
+					SELECT sid, COUNT( * ) AS value \
+					FROM shipments \
+					WHERE DATEDIFF( ship_date, order_date ) > period \
+					GROUP BY sid \
+					)shipments_delayed ON shipments_delayed.sid = suppliers.id \
+				SET suppliers.risk = CASE  \
+					WHEN shipments_delayed.value / shipments_all.value >2 /3 THEN 3  \
+					WHEN shipments_delayed.value / shipments_all.value >1 /3 THEN 2  \
+					ELSE 1 END" ")
+
 		puts "Values for #{@affiliate_id} affiliate added to warehouse: suppliers (#{@last_s}, #{@max_s}), parts (#{@last_p}, #{@max_p}), relations (#{@last_sp}, #{@max_sp})"
 	end
 
 	protected
 	def add_supplier(supplier)
-		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"]}
+		@suppliers << {:name => supplier["name"], :city => supplier["city"], :address => supplier["address"], :orders => supplier["orders"], :delays => ["delays"]}
 	end
 
 	protected
@@ -123,7 +140,7 @@ class Company
 		suppliers_values = String.new
 		@suppliers.each do |supplier|
 			suppliers_values << ',' if not suppliers_values.empty?
-			suppliers_values << '("'	<< supplier[:name] << '","' << supplier[:address] << '","' << supplier[:city] << '")'
+			suppliers_values << '("' << supplier[:name] << '","' << supplier[:address] << '","' << supplier[:city] << '")'
 		end
 
 		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city) VALUES" + suppliers_values)
