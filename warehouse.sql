@@ -5,7 +5,7 @@ CREATE TABLE suppliers (
 	address VARCHAR(20) NOT NULL,
 	risk TINYINT(2) CHECK(risk IN (0, 1, 2, 3)),
 	shipments_count INT(10) NOT NULL DEFAULT 0,
-	shipments_fails INT(10) NOT NULL DEFAULT 0,
+	shipments_delays INT(10) NOT NULL DEFAULT 0,
 
 	UNIQUE(name, city, address)
 );
