@@ -6,6 +6,52 @@ require 'thread'
 require 'bigdecimal'
 
 class Company
+	@@query_max_ids = "SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
+			FROM \
+			(SELECT MAX(SID) AS max_id FROM S) s \
+			JOIN (SELECT MAX(PID) AS max_id FROM P) p \
+			JOIN (SELECT MAX(SPID) AS max_id FROM SP) sp"
+
+	@@query_suppliers = "SELECT * FROM S \
+			WHERE SID BETWEEN %i AND %i AND \
+			SName IS NOT NULL AND \
+			SCity IS NOT NULL AND \
+			Address IS NOT NULL"
+
+	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
+			WHERE PID BETWEEN %i AND %i AND
+			PName IS NOT NULL AND \
+			Weight > 0"
+
+	@@query_shipments = "SELECT \
+			S.SName AS Supplier, \
+			S.Address AS Address, \
+			S.SCity AS City, \
+			P.PName AS Part, \
+			CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
+			SP.Qty AS Quantity, \
+			SP.OrderDate AS OrderDate, \
+			SP.Period AS Period, \
+			SP.ShipDate AS ShipDate, \
+			SP.Price AS Price, \
+			P.Weight * SP.Qty AS SPWeight \
+		FROM SP \
+		INNER JOIN S ON S.SID = SP.SID \
+		INNER JOIN P ON P.PID = SP.PID \
+		WHERE \
+			SP.SPID BETWEEN %i AND %i AND \
+			S.SName IS NOT NULL AND \
+			S.SCity IS NOT NULL AND \
+			S.Address IS NOT NULL AND \
+			P.PName IS NOT NULL AND \
+			P.Weight > 0 AND \
+			SP.OrderDate IS NOT NULL AND \
+			SP.Qty > 0 AND \
+			SP.Price > 0 AND \
+			SP.Period >= 0 AND \
+			SP.OrderDate <= SP.ShipDate \
+		HAVING SPWeight BETWEEN 0 AND 1500"
+
 	def initialize(storage, affiliate_id, last_s, last_p, last_sp)
 		@storage = storage
 		@affiliate_id = affiliate_id
@@ -45,10 +91,29 @@ class Company
 
 	def load()
 		return if @shipments_query == nil
+		puts @shipments_query
 		@storage.query(@shipments_query)
 		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@max_s}, #{@max_p}, #{@max_sp})")
 
 		puts "Values for #{@affiliate_id} affiliate added to warehouse: suppliers (#{@last_s}, #{@max_s}), parts (#{@last_p}, #{@max_p}), relations (#{@last_sp}, #{@max_sp})"
+	end
+
+	protected
+	def add_supplier(supplier)
+		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"]}
+	end
+
+	protected
+	def add_part(part)
+		@parts << {:name => part["PName"], :htp => part["HTP"], :weight => part["Weight"]}
+	end
+
+	protected
+	def add_shipment(shipment)
+		@shipments << {:supplier => shipment["Supplier"], :city => shipment["City"], :address => shipment["Address"], :supplier_id => 0,
+			:part => shipment["Part"], :part_weight => shipment["PartWeight"], :qty => shipment["Quantity"], :part_id => 0,
+			:order_date => shipment["OrderDate"], :ship_date => shipment["ShipDate"], :period => shipment["Period"], 
+			:weight => shipment["SPWeight"], :price => shipment["Price"]}
 	end
 
 	protected
@@ -125,7 +190,6 @@ class Company
 		end
 
 		@shipments.each do |shipment|
-			puts shipment
 			shipment[:supplier_id] = sids[shipment[:city]][shipment[:supplier]][shipment[:address]]
 			shipment[:part_id] = pids[shipment[:part]][shipment[:part_weight]]
 		end
@@ -134,10 +198,11 @@ class Company
 		@shipments.each do |shipment|
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
-								<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',"' \
-								<< shipment[:order_date] << '",' << shipment[:period] << ',"' << shipment[:ship_date] << '")'
+						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',"' \
+						<< shipment[:order_date] << '",' << shipment[:period] << ',"' << shipment[:ship_date] << '")'
 		end
 
+		return if shipments_values.empty?
 		@shipments_query = "INSERT INTO shipments(sid, pid, qty, price, weight, order_date, period, ship_date) VALUES" + shipments_values
 	end
 end
@@ -168,11 +233,7 @@ class AffiliateOne < Company
 	protected
 	def extract_max_ids()
 		begin
-			res = @con.query("SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
-							FROM \
-							(SELECT MAX(SID) AS max_id FROM S) s \
-							JOIN (SELECT MAX(PID) AS max_id FROM P) p \
-							JOIN (SELECT MAX(SPID) AS max_id FROM SP) sp").fetch_hash
+			res = @con.query(@@query_max_ids).fetch_hash
 
 			@max_s = res['SID']
 			@max_p = res['PID']
@@ -187,15 +248,9 @@ class AffiliateOne < Company
 	protected
 	def extract_suppliers()
 		begin
-			res = @con.query("SELECT * FROM S \
-					WHERE SID BETWEEN #{@last_s} + 1 AND #{@max_s} AND \
-					SName IS NOT NULL AND \
-					SCity IS NOT NULL AND \
-					Address IS NOT NULL")
-
 			@suppliers = Array.new
-			res.each_hash do |row|
-				@suppliers << {:name => row["SName"], :city => row["SCity"], :address => row["Address"]}
+			@con.query(@@query_suppliers % [@last_s + 1, @max_s]).each_hash do |row|
+				self.add_supplier row
 			end
 		rescue Mysql::Error => e
 			puts e.errno
@@ -207,14 +262,9 @@ class AffiliateOne < Company
 	protected
 	def extract_parts()
 		begin
-			res = @con.query("SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
-					WHERE PID BETWEEN #{@last_p} + 1 AND #{@max_p} AND
-					PName IS NOT NULL AND \
-					Weight > 0")
-
 			@parts = Array.new
-			res.each_hash do |row|
-				@parts << {:name => row["PName"], :htp => row["HTP"], :weight => row["Weight"]}
+			@con.query(@@query_parts % [@last_p + 1, @max_p]).each_hash do |row|
+				self.add_part row
 			end
 		rescue Mysql::Error => e
 			puts e.errno
@@ -226,41 +276,9 @@ class AffiliateOne < Company
 	protected
 	def extract_shipments()
 		begin
-			res = @con.query("SELECT \
-					S.SName AS Supplier, \
-					S.Address AS Address, \
-					S.SCity AS City, \
-					P.PName AS Part, \
-					CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
-					SP.Qty AS Quantity, \
-					SP.OrderDate AS OrderDate, \
-					SP.Period AS Period, \
-					SP.ShipDate AS ShipDate, \
-					SP.Price AS Price, \
-					P.Weight * SP.Qty AS SPWeight \
-				FROM SP \
-				INNER JOIN S ON S.SID = SP.SID \
-				INNER JOIN P ON P.PID = SP.PID \
-				WHERE \
-					SP.SPID BETWEEN #{@last_sp} + 1 AND #{@max_sp} AND \
-					S.SName IS NOT NULL AND \
-					S.SCity IS NOT NULL AND \
-					S.Address IS NOT NULL AND \
-					P.PName IS NOT NULL AND \
-					P.Weight > 0 AND \
-					SP.OrderDate IS NOT NULL AND \
-					SP.Qty > 0 AND \
-					SP.Price > 0 AND \
-					SP.Period >= 0 AND \
-					SP.OrderDate <= SP.ShipDate \
-				HAVING SPWeight BETWEEN 0 AND 1500")
-
 			@shipments = Array.new
-			res.each_hash do |row|
-				@shipments << {:supplier => row["Supplier"], :city => row["City"], :address => row["Address"], :supplier_id => 0,
-								:part => row["Part"], :part_weight => row["PartWeight"], :qty => row["Quantity"], :part_id => 0,
-								:order_date => row["OrderDate"], :ship_date => row["ShipDate"], :period => row["Period"], 
-								:weight => row["SPWeight"], :price => row["Price"]}
+			@con.query(@@query_shipments % [@last_sp + 1, @max_sp]).each_hash do |row|
+				self.add_shipment row
 			end
 		rescue Mysql::Error => e
 			puts e.errno
@@ -294,11 +312,7 @@ class AffiliateTwo < Company
 	protected
 	def extract_max_ids()
 		begin
-			@con.execute("SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
-			FROM \
-			(SELECT MAX(SID) AS max_id FROM S) s \
-			JOIN (SELECT MAX(PID) AS max_id FROM P) p \
-			JOIN (SELECT MAX(SPID) AS max_id FROM SP) sp") do |row|
+			@con.execute(@@query_max_ids) do |row|
 				@max_s = row['SID'] unless row['SID'] == nil
 				@max_p = row['PID'] unless row['PID'] == nil
 				@max_sp = row['SPID'] unless row['SPID'] == nil
@@ -313,12 +327,8 @@ class AffiliateTwo < Company
 	def extract_suppliers()
 		begin
 			@suppliers = Array.new
-			@con.execute("SELECT * FROM S \
-			WHERE SID BETWEEN #{@last_s} + 1 AND #{@max_s} AND \
-			SName IS NOT NULL AND \
-			SCity IS NOT NULL AND \
-			Address IS NOT NULL") do |row|
-				@suppliers << {:name => row["SName"], :city => row["SCity"], :address => row["Address"]}
+			@con.execute(@@query_suppliers % [@last_s + 1, @max_s]) do |row|
+				self.add_supplier
 			end
 		rescue SQLite3::Exception => e
 			puts e
@@ -330,11 +340,8 @@ class AffiliateTwo < Company
 	def extract_parts()
 		begin
 			@parts = Array.new
-			@con.execute("SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
-			WHERE PID BETWEEN #{@last_p} + 1 AND #{@max_p} AND
-			PName IS NOT NULL AND \
-			Weight > 0") do |row|
-				@parts << {:name => row["PName"], :htp => row["HTP"], :weight => row["Weight"]}
+			@con.execute(@@query_parts % [@last_p + 1, @max_p]) do |row|
+				self.add_part row
 			end
 		rescue SQLite3::Exception => e
 			puts e
@@ -346,38 +353,8 @@ class AffiliateTwo < Company
 	def extract_shipments()
 		begin
 			@shipments = Array.new
-			@con.execute("SELECT \
-				S.SName AS Supplier, \
-				S.Address AS Address, \
-				S.SCity AS City, \
-				P.PName AS Part, \
-				CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
-				SP.Qty AS Quantity, \
-				SP.OrderDate AS OrderDate, \
-				SP.Period AS Period, \
-				SP.ShipDate AS ShipDate, \
-				SP.Price AS Price, \
-				P.Weight * SP.Qty AS SPWeight \
-			FROM SP \
-			INNER JOIN S ON S.SID = SP.SID \
-			INNER JOIN P ON P.PID = SP.PID \
-			WHERE \
-				SP.SPID BETWEEN #{@last_sp} + 1 AND #{@max_sp} AND \
-				S.SName IS NOT NULL AND \
-				S.SCity IS NOT NULL AND \
-				S.Address IS NOT NULL AND \
-				P.PName IS NOT NULL AND \
-				P.Weight > 0 AND \
-				SP.OrderDate IS NOT NULL AND \
-				SP.Qty > 0 AND \
-				SP.Price > 0 AND \
-				SP.Period >= 0 AND \
-				SP.OrderDate <= SP.ShipDate \
-			HAVING SPWeight BETWEEN 0 AND 1500") do |row|
-				@shipments << {:supplier => row["Supplier"], :city => row["City"], :address => row["Address"], :supplier_id => 0,
-							:part => row["Part"], :part_weight => row["PartWeight"], :qty => row["Quantity"], :part_id => 0,
-							:order_date => row["OrderDate"], :ship_date => row["ShipDate"], :period => row["Period"], 
-							:weight => row["SPWeight"], :price => row["Price"]}
+			@con.execute(@@query_shipments % [@last_sp + 1, @max_sp]) do |row|
+				self.add_shipment row
 			end
 		rescue SQLite3::Exception => e 	
    			puts e
@@ -391,10 +368,10 @@ begin
 
 	databases = [
 		AffiliateOne,
-	#	AffiliateTwo
+		#AffiliateTwo
 	]
 
-	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
+	last_ids = Array.new(databases.count) {{:last_sid => 1, :last_pid => 1, :last_spid => 1}}
 
 	storage = Mysql.init
 	storage.options(Mysql::SET_CHARSET_NAME, 'utf8')
