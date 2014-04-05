@@ -110,7 +110,7 @@ class Company
 				SET suppliers.risk = CASE  \
 					WHEN shipments_delayed.value / shipments_all.value >2 /3 THEN 3  \
 					WHEN shipments_delayed.value / shipments_all.value >1 /3 THEN 2  \
-					ELSE 1 END" ")
+					ELSE 1 END")
 
 		puts "Values for #{@affiliate_id} affiliate added to warehouse: suppliers (#{@last_s}, #{@max_s}), parts (#{@last_p}, #{@max_p}), relations (#{@last_sp}, #{@max_sp})"
 	end
