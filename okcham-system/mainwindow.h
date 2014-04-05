@@ -41,6 +41,8 @@ private:
 
 	void add_col(QTableWidget *table, std::string header);
 	void add_row(QTableWidget *table, std::string header);
+	void set_cell(QTableWidget *table, size_t row, size_t col, std::string value);
+	void clear_table(QTableWidget *table);
 
 	void set_olap_dimensions();
 
@@ -48,6 +50,8 @@ private:
 	void update_olap_combos(uint8_t combo_semantic, int index);
 	void fill_olap_cube(OLAP::cube_t cube);
 	void fill_z_values();
+
+	void perform_classification();
 
 	std::string get_cron_parameters() const;
 	std::string get_cron_statement() const;

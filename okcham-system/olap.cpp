@@ -69,6 +69,31 @@ const QStringList& OLAP::get_values_list(OLAP::Type dimension, uint8_t detalisat
 	return this->lists[dimension][detalisation];
 }
 
+void OLAP::classify(std::vector<std::string> &low_risk, std::vector<std::string> &middle_risk, std::vector<std::string> &high_risk) const
+{
+	std::string query = "SELECT risk, name FROM suppliers WHERE risk IN (1, 2, 3) ORDER BY name";
+	if (mysql_query(this->connection, query.c_str()))
+		return;
+
+	auto result = mysql_use_result(this->connection);
+	if (!result)
+		return;
+
+	MYSQL_ROW row;
+	while (row = mysql_fetch_row(result))
+	{
+		std::string risk = row[0];
+		auto supplier = row[1];
+
+		if (risk == "1")
+			low_risk.push_back(supplier);
+		else if (risk == "2")
+			middle_risk.push_back(supplier);
+		else if (risk == "3")
+			high_risk.push_back(supplier);
+	}
+}
+
 OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 {
 	if (!result)

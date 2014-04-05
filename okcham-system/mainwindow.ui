@@ -42,7 +42,7 @@
      <locale language="Russian" country="Russia"/>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_ETL">
      <attribute name="title">
@@ -537,28 +537,8 @@
        <number>0</number>
       </property>
       <property name="columnCount">
-       <number>3</number>
+       <number>0</number>
       </property>
-      <column>
-       <property name="text">
-        <string>Low</string>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Middle</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>High</string>
-       </property>
-      </column>
      </widget>
      <widget class="QLabel" name="label">
       <property name="geometry">

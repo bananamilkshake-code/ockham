@@ -35,6 +35,7 @@ public:
 	void fill_values();
 
 	const QStringList& get_values_list(Type dimension, uint8_t detalisation);
+	void classify(std::vector<std::string> &low_risk, std::vector<std::string> &middle_risk, std::vector<std::string> &high_risk) const;
 
 private:
 	typedef std::vector<std::vector<QStringList>> values_lists_t;

@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 
 	this->set_olap_dimensions();
+	this->perform_classification();
 }
 
 MainWindow::~MainWindow()
@@ -63,6 +64,18 @@ void MainWindow::add_row(QTableWidget *table, std::string header)
 
 	QTableWidgetItem* header_item = new QTableWidgetItem(header.c_str(), QTableWidgetItem::Type);
 	table->setVerticalHeaderItem(row_count, header_item);
+}
+
+void MainWindow::set_cell(QTableWidget *table, size_t row, size_t col, std::string value)
+{
+	table->setItem(row, col, new QTableWidgetItem());
+	table->item(row, col)->setText(value.c_str());
+}
+
+void MainWindow::clear_table(QTableWidget *table)
+{
+	table->setColumnCount(0);
+	table->setRowCount(0);
 }
 
 void MainWindow::set_olap_dimensions()
@@ -202,6 +215,7 @@ void MainWindow::on_button_olap_clicked()
 
 void MainWindow::on_button_classify_clicked()
 {
+	this->perform_classification();
 }
 
 void MainWindow::on_button_clasterize_clicked()
@@ -211,6 +225,7 @@ void MainWindow::on_button_clasterize_clicked()
 void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 {
 	auto table = this->ui->table_olap;
+	this->clear_table(table);
 
 	std::unordered_set<std::string> values_list;
 
@@ -249,8 +264,7 @@ void MainWindow::fill_olap_cube(OLAP::cube_t cube)
 			if (value.length() == 0)
 				value = "0";
 
-			table->setItem(row, col, new QTableWidgetItem());
-			table->item(row, col)->setText(value.c_str());
+			this->set_cell(table, row, col, value);
 		}
 	}
 
@@ -268,6 +282,41 @@ void MainWindow::fill_z_values()
 
 	this->ui->combo_z_value->clear();
 	this->ui->combo_z_value->addItems(this->olap.get_values_list(OLAP::Type(dimension), detalisation));
+}
+
+typedef std::vector<std::string> suppliers_names_t;
+
+enum RiskGroups : uint8_t
+{
+	LOW,
+	MIDDLE,
+	HIGH,
+
+	MAX_RISK_GROUP
+};
+
+void MainWindow::perform_classification()
+{
+	std::vector<suppliers_names_t> risks_groups(MAX_RISK_GROUP);
+
+	this->olap.classify(risks_groups[LOW], risks_groups[MIDDLE], risks_groups[HIGH]);
+
+	auto size = std::max(risks_groups[LOW].size(), std::max(risks_groups[MIDDLE].size(), risks_groups[HIGH].size()));
+
+	auto table = this->ui->table_classification;
+
+	this->clear_table(table);
+	this->add_col(table, "Low");
+	this->add_col(table, "Middle");
+	this->add_col(table, "High");
+	table->setRowCount(size);
+
+	for (auto level = 0; level < MAX_RISK_GROUP; level++)
+	{
+		auto &group = risks_groups[level];
+		for (auto row = 0; row < group.size(); row++)
+			this->set_cell(table, row, level, group[row]);
+	}
 }
 
 void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)
