@@ -4,6 +4,7 @@ require 'mysql'
 require 'sqlite3'
 require 'thread'
 require 'bigdecimal'
+
 class Company
 	@@query_max_ids = "SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
 			FROM \
@@ -51,7 +52,7 @@ class Company
 			SP.OrderDate <= SP.ShipDate \
 		HAVING SPWeight BETWEEN 0 AND 1500"
 
-	def initialize(storage, affiliate_id, last_s, last_p, last_sp)
+	def initialize storage, affiliate_id, last_s, last_p, last_sp
 		@storage = storage
 		@affiliate_id = affiliate_id
 
@@ -66,7 +67,7 @@ class Company
 		puts "Company #{@affiliate_id} initialized"
 	end
 
-	def extract()
+	def extract
 		self.create_connection
 
 		self.extract_max_ids
@@ -80,7 +81,7 @@ class Company
 		puts "Company #{@affiliate_id} data extracted"
 	end
 
-	def transform()
+	def transform
 		self.create_suppliers
 		self.create_parts
 		self.create_shipments
@@ -88,7 +89,7 @@ class Company
 		puts "Data of affiliate #{@affiliate_id} transformed"
 	end
 
-	def load()
+	def load
 		return if @shipments_query == nil
 		puts @shipments_query
 		@storage.query(@shipments_query)
@@ -114,17 +115,17 @@ class Company
 	end
 
 	protected
-	def add_supplier(supplier)
+	def add_supplier supplier
 		@suppliers << {:name => supplier["name"], :city => supplier["city"], :address => supplier["address"], :orders => supplier["orders"], :delays => ["delays"]}
 	end
 
 	protected
-	def add_part(part)
+	def add_part part
 		@parts << {:name => part["PName"], :htp => part["HTP"], :weight => part["Weight"]}
 	end
 
 	protected
-	def add_shipment(shipment)
+	def add_shipment shipment
 		@shipments << {:supplier => shipment["Supplier"], :city => shipment["City"], :address => shipment["Address"], :supplier_id => 0,
 			:part => shipment["Part"], :part_weight => shipment["PartWeight"], :qty => shipment["Quantity"], :part_id => 0,
 			:order_date => shipment["OrderDate"], :ship_date => shipment["ShipDate"], :period => shipment["Period"], 
@@ -132,7 +133,7 @@ class Company
 	end
 
 	protected
-	def create_suppliers()
+	def create_suppliers
 		return if @suppliers.empty?
 
 		suppliers_values = String.new
@@ -145,7 +146,7 @@ class Company
 	end
 
 	protected	
-	def create_parts()
+	def create_parts
 		return if @parts.empty?
 
 		parts_values = String.new
@@ -158,7 +159,7 @@ class Company
 	end
 
 	protected	
-	def create_shipments()
+	def create_shipments
 		return if @shipments.empty?
 
 		suppliers_values = String.new
@@ -227,7 +228,7 @@ class AffiliateOne < Company
 	end
 
 	protected
-	def create_connection()
+	def create_connection
 		begin
 			@con = Mysql.init
 			@con.options(Mysql::SET_CHARSET_NAME, 'utf8')
@@ -240,12 +241,12 @@ class AffiliateOne < Company
 	end
 
 	protected
-	def close_connection()
+	def close_connection
 		@con.close if @con
 	end
 
 	protected
-	def extract_max_ids()
+	def extract_max_ids
 		begin
 			res = @con.query(@@query_max_ids).fetch_hash
 
@@ -260,7 +261,7 @@ class AffiliateOne < Company
 	end
 
 	protected
-	def extract_suppliers()
+	def extract_suppliers
 		begin
 			@suppliers = Array.new
 			@con.query(@@query_suppliers % [@last_s + 1, @max_s]).each_hash do |row|
@@ -274,7 +275,7 @@ class AffiliateOne < Company
 	end
 
 	protected
-	def extract_parts()
+	def extract_parts
 		begin
 			@parts = Array.new
 			@con.query(@@query_parts % [@last_p + 1, @max_p]).each_hash do |row|
@@ -288,7 +289,7 @@ class AffiliateOne < Company
 	end
 
 	protected
-	def extract_shipments()
+	def extract_shipments
 		begin
 			@shipments = Array.new
 			@con.query(@@query_shipments % [@last_sp + 1, @max_sp]).each_hash do |row|
@@ -308,7 +309,7 @@ class AffiliateTwo < Company
 	end
 
 	protected
-	def create_connection()
+	def create_connection
 		begin
 			@con = SQLite3::Database.new "company.db"
 			@con.results_as_hash = true
@@ -319,12 +320,12 @@ class AffiliateTwo < Company
 	end
 
 	protected
-	def close_connection()
+	def close_connection
 		@con.close if @con
 	end
 
 	protected
-	def extract_max_ids()
+	def extract_max_ids
 		begin
 			@con.execute(@@query_max_ids) do |row|
 				@max_s = row['SID'] unless row['SID'] == nil
@@ -338,7 +339,7 @@ class AffiliateTwo < Company
 	end
 
 	protected
-	def extract_suppliers()
+	def extract_suppliers
 		begin
 			@suppliers = Array.new
 			@con.execute(@@query_suppliers % [@last_s + 1, @max_s]) do |row|
@@ -351,7 +352,7 @@ class AffiliateTwo < Company
 	end
 
 	protected
-	def extract_parts()
+	def extract_parts
 		begin
 			@parts = Array.new
 			@con.execute(@@query_parts % [@last_p + 1, @max_p]) do |row|
@@ -364,7 +365,7 @@ class AffiliateTwo < Company
 	end
 	
 	protected
-	def extract_shipments()
+	def extract_shipments
 		begin
 			@shipments = Array.new
 			@con.execute(@@query_shipments % [@last_sp + 1, @max_sp]) do |row|
@@ -411,6 +412,7 @@ class Classificator
 		puts info_D
 
 		return [suppliers[0][:risk]] if info_D == 0
+
 		# Информация, необходимая для классификации множества D
 		gain_D = Hash.new
 
@@ -532,7 +534,7 @@ begin
 	end
 
 	threads = []
-	databases.each_with_index {|database, i|
+	databases.each_with_index do |database, i|
 		threads << Thread.new() {
 			affiliate = database.new(storage, i, last_ids[i][:last_sid], last_ids[i][:last_pid], last_ids[i][:last_spid])
 
@@ -540,7 +542,7 @@ begin
 			affiliate.transform()
 			affiliate.load()
 		}
-	}
+	end
 	threads.each {|t| t.join}
 
 	classify storage
