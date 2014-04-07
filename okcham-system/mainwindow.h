@@ -52,6 +52,7 @@ private:
 	void fill_z_values();
 
 	void perform_classification();
+	void perform_clasterisation();
 
 	std::string get_cron_parameters() const;
 	std::string get_cron_statement() const;

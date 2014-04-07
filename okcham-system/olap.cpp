@@ -4,6 +4,12 @@
 
 #include <assert.h>
 #include <sstream>
+#include <random>
+
+position_t operator +(const position_t &p1, const position_t &p2)
+{
+	return p1;
+}
 
 const QStringList OLAP::DETALIZATION[] =
 {
@@ -94,6 +100,55 @@ void OLAP::classify(std::vector<std::string> &low_risk, std::vector<std::string>
 	}
 }
 
+static float distance(const OLAP::position_t &s1, const OLAP::position_t &s2)
+{
+	return 0.0;
+}
+
+void OLAP::clasterize(std::string date_from, std::string date_to) const
+{
+	std::string query ="SELECT "
+			"sp.weight AS weight, "
+			"sp.price AS price,"
+			"sp.qty AS quantity,"
+			"p.name AS part_name,"
+			"s.city AS city, "
+			"p.weight AS part_weight,"
+			"p.HTP AS htp,"
+			"sp.part_price AS part_price"
+		"FROM (SELECT * FROM shipments WHERE order_date BETWEEN " + date_from + " AND " + date_to + " ) sp"
+		"LEFT JOIN parts p ON sp.pid = p.id "
+		"LEFT JOIN suppliers s ON sp.sid = s.id "
+		"WHERE p.name IS NOT NULL";
+
+	if (mysql_query(this->connection, query.c_str()))
+		return;
+
+	auto result = mysql_use_result(this->connection);
+	if (!result)
+		return;
+
+	shipments_t shipments;
+	MYSQL_ROW row;
+	while (row = mysql_fetch_row(result))
+	{
+		Shipment shipment;
+
+		shipment.weight = atof(row[0]);
+		shipment.price = atof(row[1]);
+		shipment.quantity = atoi(row[2]);
+		shipment.detail_name = row[3];
+		shipment.city = row[4];
+		shipment.detail_weight = atof(row[5]);
+		shipment.htp = atoi(row[6]);
+		shipment.detail_price = atof(row[7]);
+
+		shipments.insert(shipment);
+	}
+
+	this->k_means(shipments);
+}
+
 OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 {
 	if (!result)
@@ -113,6 +168,57 @@ OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 	}
 
 	return cube;
+}
+
+static constexpr uint8_t CLUSTERS_COUNT = 3;
+
+void OLAP::k_means(shipments_t shipments)
+{
+	clusters_t clusters;
+
+	// Initialize clusters: choose random element to be centers.
+	std::unordered_set<Shipment> used_elements;
+	for (uint8_t i = 0; i < CLUSTERS_COUNT; i++)
+	{
+		auto element = shipments.begin();
+		do {
+			auto random_index = 0;
+			std::advance(element, random_index);
+		} while(used_elements.count(element));
+
+		clusters.insert = Cluster(*element);
+
+		shipments.erase(element);
+		used_elements.insert(element);
+	}
+
+	// Perform cluster optimisation untill convergence
+	clusters_t old_clasters = clusters;
+	do {
+		// Clear all elements of cluster
+		for (auto cluster : clusters)
+			cluster->elements.clear();
+
+		// Attribute the closest cluster to each data point
+		for (auto element : shipments)
+		{
+			Cluster &cluster = nullptr;
+			for (auto current_cluster : clusters)
+			{
+				auto distance = ::distance(element->position, cluster.center);
+				auto current_distance = ::distance(element->position, current_cluster.center);
+				if (cluster == nullptr && current_distance > distance)
+					continue;
+
+				cluster = &current_cluster;
+			}
+			cluster.elements.insert(element);
+		}
+
+		// Set the position of each cluster to the mean of all data points belonging to that cluster
+		for (auto cluster : clusters)
+			cluster->recalc_position();
+	} while (old_clasters != clusters);
 }
 
 void OLAP::fill_values()
