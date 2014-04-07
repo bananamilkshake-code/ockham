@@ -33,7 +33,8 @@ class Company
 			SP.OrderDate AS OrderDate, \
 			SP.Period AS Period, \
 			SP.ShipDate AS ShipDate, \
-			SP.Price AS Price, \
+			Sp.Price AS PartPrice, \
+			SP.Price * SP.Qty AS Price, \
 			P.Weight * SP.Qty AS SPWeight \
 		FROM SP \
 		INNER JOIN S ON S.SID = SP.SID \
@@ -129,7 +130,7 @@ class Company
 		@shipments << {:supplier => shipment["Supplier"], :city => shipment["City"], :address => shipment["Address"], :supplier_id => 0,
 			:part => shipment["Part"], :part_weight => shipment["PartWeight"], :qty => shipment["Quantity"], :part_id => 0,
 			:order_date => shipment["OrderDate"], :ship_date => shipment["ShipDate"], :period => shipment["Period"], 
-			:weight => shipment["SPWeight"], :price => shipment["Price"]}
+			:weight => shipment["SPWeight"], :price => shipment["Price"], :part_price => shipment["PartPrice"]}
 	end
 
 	protected
@@ -213,12 +214,12 @@ class Company
 		@shipments.each do |shipment|
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
-						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',' \
+						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:part_price] << ',' << shipment[:weight] << ',' \
 						<< shipment[:order_date].inspect << ',' << shipment[:period] << ',' << shipment[:ship_date].inspect << ')'
 		end
 
 		return if shipments_values.empty?
-		@shipments_query = "INSERT INTO shipments(sid, pid, qty, price, weight, order_date, period, ship_date) VALUES" + shipments_values
+		@shipments_query = "INSERT INTO shipments(sid, pid, qty, price, part_price, weight, order_date, period, ship_date) VALUES" + shipments_values
 	end
 end
 
