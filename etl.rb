@@ -4,7 +4,6 @@ require 'mysql'
 require 'sqlite3'
 require 'thread'
 require 'bigdecimal'
-
 class Company
 	@@query_max_ids = "SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
 			FROM \
@@ -95,22 +94,21 @@ class Company
 		@storage.query(@shipments_query)
 		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@max_s}, #{@max_p}, #{@max_sp})")
 
-		@storage.query("UPDATE suppliers  \
-				INNER JOIN ( \
-					SELECT sid, COUNT( * ) AS value \
-					FROM shipments \
-					GROUP BY sid \
-					)shipments_all ON shipments_all.sid = suppliers.id \
-				LEFT JOIN ( \
-					SELECT sid, COUNT( * ) AS value \
-					FROM shipments \
-					WHERE DATEDIFF( ship_date, order_date ) > period \
-					GROUP BY sid \
-					)shipments_delayed ON shipments_delayed.sid = suppliers.id \
-				SET suppliers.risk = CASE  \
-					WHEN shipments_delayed.value / shipments_all.value >2 /3 THEN 3  \
-					WHEN shipments_delayed.value / shipments_all.value >1 /3 THEN 2  \
-					ELSE 1 END")
+		@storage.query "UPDATE suppliers  \
+			INNER JOIN ( \
+				SELECT sid, COUNT( * ) AS value, SUM(qty) AS details_count\
+				FROM shipments \
+				GROUP BY sid \
+				)shipments_all ON shipments_all.sid = suppliers.id \
+			LEFT JOIN ( \
+				SELECT sid, COUNT( * ) AS value \
+				FROM shipments \
+				WHERE DATEDIFF( ship_date, order_date ) > period \
+				GROUP BY sid \
+				)shipments_delayed ON shipments_delayed.sid = suppliers.id \
+			SET suppliers.shipments_count = shipments_all.value, \
+				suppliers.shipments_delays = shipments_delayed.value, \
+				suppliers.details_count = shipments_all.details_count"
 
 		puts "Values for #{@affiliate_id} affiliate added to warehouse: suppliers (#{@last_s}, #{@max_s}), parts (#{@last_p}, #{@max_p}), relations (#{@last_sp}, #{@max_sp})"
 	end
@@ -167,11 +165,10 @@ class Company
 		parts_values = String.new
 		@shipments.each do |shipment|
 			suppliers_values << ',' if not suppliers_values.empty?
-			suppliers_values << '("'	<< shipment[:supplier] << '","' << shipment[:address] << '","' << shipment[:city] << '")'
+			suppliers_values << '('	<< shipment[:supplier].inspect << ',' << shipment[:address].inspect << ',' << shipment[:city].inspect << ')'
 
 			parts_values << ',' if not parts_values.empty?
-			parts_values << '("' << shipment[:part] << '",' << shipment[:part_weight] << ')'
-
+			parts_values << '(' << shipment[:part].inspect << ',' << shipment[:part_weight] << ')'
 		end
 
 		supplier_ids = @storage.query('SELECT id, name, address, city FROM suppliers WHERE (name, address, city) IN (' + suppliers_values + ')')
@@ -215,8 +212,8 @@ class Company
 		@shipments.each do |shipment|
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
-						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',"' \
-						<< shipment[:order_date] << '",' << shipment[:period] << ',"' << shipment[:ship_date] << '")'
+						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:weight] << ',' \
+						<< shipment[:order_date].inspect << ',' << shipment[:period] << ',' << shipment[:ship_date].inspect << ')'
 		end
 
 		return if shipments_values.empty?
@@ -374,10 +371,132 @@ class AffiliateTwo < Company
 				self.add_shipment row
 			end
 		rescue SQLite3::Exception => e 	
-   			puts e
-   			self.close_connection
-   		end
+			puts e
+			self.close_connection
+		end
 	end
+end
+
+class Classificator
+	def initialize key
+		@key = key
+	end
+
+	def proceed_data suppliers
+		conditions = self.proceed suppliers
+		puts conditions
+	end
+
+	protected
+	def proceed suppliers
+		puts suppliers
+
+		d = suppliers.size
+
+		# Ожидаемое количество информации (энтропия)
+		classifications = Hash.new
+		suppliers.each do |supplier_data|
+				value = supplier_data[:risk]
+
+				classifications[value] = 0 if not classifications.key? value
+				classifications[value] += 1
+		end
+
+		info_D = 0.0
+		classifications.each do |value, count|
+			p = count.to_f / d
+			info_D -= p * Math::log(p) / Math::log(2)
+		end
+
+		puts info_D
+
+		return [suppliers[0][:risk]] if info_D == 0
+		# Информация, необходимая для классификации множества D
+		gain_D = Hash.new
+
+		attributes = suppliers[0].keys
+
+		# Для каждого атрибута высчитываем количество значений,
+		# соответствующих каждому значению атрибута :risk
+		attributes.each do |attribute|
+			next if attribute == :risk
+
+			puts attribute
+
+			# Подсчет общего количества значений для атрибута
+			values_count = Hash.new
+			# Каждоое значение атрибута - ключ
+			values_range = Hash.new
+
+			suppliers.each do |supplier_data|
+				value = supplier_data[attribute]	# Выбираем значение атрибута для записи
+				risk = supplier_data[:risk]			# Соответствующее ему значение риска
+
+				values_range[value] = Hash.new if not values_range.key? value
+				values_range[value][risk] = 0 if not values_range[value].key? risk
+				values_range[value][risk] += 1 # Увеличиваем значение попаданий пары {value, risk} на 1
+
+				values_count[value] = 0 if not values_count.key? value
+				values_count[value] += 1
+			end
+
+			puts values_range
+			puts values_count
+
+			# Вычисляем информацию, необходимую для классификации множества
+			info_D_i = 0
+			values_range.each do |attribute_value, classifications|
+				entropy = 0
+				classifications.each do |risk, value|
+					p = value.to_f / values_count[attribute_value]
+					entropy -= p * Math::log(p) / Math::log(2)
+				end
+				info_D_i += entropy * values_count[attribute_value] / d
+			end
+
+			gain_D[attribute] = info_D - info_D_i
+		end
+
+		puts gain_D.inspect
+
+		# Найти атрибут с наилучшим приростом информации
+		best_attribute = gain_D.key gain_D.values.max
+
+		conditions = Hash.new
+
+		# Разделить на группы по значениям лучшего атрибута
+		suppliers_by_value = Hash.new
+		suppliers.each do |data|
+			value = data[best_attribute]
+			data.delete best_attribute
+
+			suppliers_by_value[value] = Array.new if not suppliers_by_value.key? value
+			suppliers_by_value[value] << data
+		end
+
+		puts suppliers_by_value
+
+		suppliers_by_value.each do |value, suppliers|
+			conditions[value] = Hash.new if not conditions.key? value
+			conditions[value] = self.proceed suppliers
+		end
+
+		return {best_attribute => conditions}
+	end
+end
+
+def classify storage
+	# Получаем информацию о поставщиках
+	result = storage.query ("SELECT shipments_count, shipments_delays, details_count, risk FROM suppliers WHERE risk IN (1,2,3)")
+	suppliers = Array.new
+
+	result.each_hash do |data|
+		suppliers << {:shipments_count => data['shipments_count'], :shipments_delays => data['shipments_delays'], 
+			:details_count => data['details_count'], :risk => data['risk']}
+	end
+
+	classificator = Classificator.new :risk
+	classificator.proceed_data suppliers
 end
 
 begin
@@ -423,6 +542,8 @@ begin
 		}
 	}
 	threads.each {|t| t.join}
+
+	classify storage
 
 	storage.close
 
