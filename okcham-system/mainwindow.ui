@@ -42,7 +42,7 @@
      <locale language="Russian" country="Russia"/>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_ETL">
      <attribute name="title">
@@ -458,9 +458,12 @@
       </attribute>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab">
+    <widget class="QWidget" name="tab_Classification">
+     <property name="toolTip">
+      <string/>
+     </property>
      <attribute name="title">
-      <string>Data Mining</string>
+      <string>Classification</string>
      </attribute>
      <widget class="QPushButton" name="button_classify">
       <property name="geometry">
@@ -475,59 +478,13 @@
        <string>Classify</string>
       </property>
      </widget>
-     <widget class="QListView" name="list_clasterized">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>280</y>
-        <width>631</width>
-        <height>231</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="button_clasterize">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>250</y>
-        <width>80</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Clasterize</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_frequency">
-      <property name="geometry">
-       <rect>
-        <x>140</x>
-        <y>250</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Frequency:</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spin_frequency">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>250</y>
-        <width>71</width>
-        <height>24</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QTableWidget" name="table_classification">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>40</y>
         <width>631</width>
-        <height>201</height>
+        <height>441</height>
        </rect>
       </property>
       <property name="selectionMode">
@@ -551,6 +508,70 @@
       </property>
       <property name="text">
        <string>Perfomrs suppliers classification by risk</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="ta_clasterisation">
+     <attribute name="title">
+      <string>Clasterisation</string>
+     </attribute>
+     <widget class="QPushButton" name="button_clasterize">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>10</y>
+        <width>80</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Clasterise</string>
+      </property>
+     </widget>
+     <widget class="QDateEdit" name="date_clasterise_from">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>10</y>
+        <width>110</width>
+        <height>24</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QDateEdit" name="date_claterise_to">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>10</y>
+        <width>110</width>
+        <height>24</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_claster_from">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>57</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>From:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_claster_to">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>10</y>
+        <width>57</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>To:</string>
       </property>
      </widget>
     </widget>
