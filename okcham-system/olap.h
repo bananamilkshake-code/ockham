@@ -1,6 +1,7 @@
 #ifndef OLAP_H
 #define OLAP_H
 
+#include <list>
 #include <map>
 #include <string>
 #include <vector>
@@ -36,12 +37,22 @@ public:
 
 		position_t position;
 
-		bool operator<(const Shipment &other) const { return this->position < other.position; }
+		bool operator < (const Shipment &other) const { return this->position < other.position; }
+		bool operator == (const Shipment &other) const { return abs(this->weight - other.weight) < 0.0001
+					&& abs(this->detail_weight - other.detail_weight) < 0.0001
+					&& abs(this->price - other.price) < 0.0001
+					&& abs(this->detail_price - other.detail_price ) < 0.0001
+					&& this->quantity == other.quantity
+					&& this->detail_name == other.detail_name
+					&& this->city == other.city
+					&& this->htp == other.htp
+					&& this->position == other.position; }
 	};
+	typedef std::set<Shipment> shipments_t;
 
 	struct Cluster
 	{
-		Cluster(Shipment center): m(center.get_position()) {}
+		Cluster(Shipment center): m(center.position) {}
 
 		shipments_t elements;
 
@@ -49,20 +60,18 @@ public:
 		{
 			auto sum = position_t();
 			for (auto element : this->elements)
-				sum += get_position();
+				sum += element.position;
 
 			this->m = sum / this->elements.size();
 		}
 
 		bool operator==(const Cluster &other) const { return abs(this->m - other.m) < 0.0001; }
-
+		position_t center() const { return this->m; }
 	private:
 		position_t m;
 	};
-
+	typedef std::list<Cluster> clusters_t;
 	typedef std::map<std::string, std::map<std::string, std::string>> cube_t;
-	typedef std::set<Shipment> shipments_t;
-	typedef std::set<Cluster> clusters_t;
 
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
@@ -86,7 +95,7 @@ private:
 
 	cube_t convert_result(MYSQL_RES *result);
 
-	void k_means(shipments_t shipments);
+	void k_means(const shipments_t &shipments) const;
 };
 
 #endif // OLAP_H

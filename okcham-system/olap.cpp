@@ -5,12 +5,13 @@
 #include <assert.h>
 #include <sstream>
 #include <random>
-
-position_t operator +(const position_t &p1, const position_t &p2)
+#include <unordered_set>
+/*
+OLAP::position_t operator+(const OLAP::position_t &p1, const OLAP::position_t &p2)
 {
 	return p1;
 }
-
+*/
 const QStringList OLAP::DETALIZATION[] =
 {
 	{"Year", "Month"},
@@ -172,7 +173,16 @@ OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 
 static constexpr uint8_t CLUSTERS_COUNT = 3;
 
-void OLAP::k_means(shipments_t shipments)
+size_t hash_shipment(const OLAP::Shipment &s) { return (size_t)s.position;}
+
+namespace std {
+	template <>
+	struct hash<OLAP::Shipment> {
+		size_t operator() (const OLAP::Shipment &s) const { return hash_shipment(s); }
+	};
+}
+
+void OLAP::k_means(const shipments_t &shipments) const
 {
 	clusters_t clusters;
 
@@ -184,12 +194,10 @@ void OLAP::k_means(shipments_t shipments)
 		do {
 			auto random_index = 0;
 			std::advance(element, random_index);
-		} while(used_elements.count(element));
+		} while(used_elements.count(*element));
 
-		clusters.insert = Cluster(*element);
-
-		shipments.erase(element);
-		used_elements.insert(element);
+		clusters.push_back(Cluster(*element));
+		used_elements.insert(*element);
 	}
 
 	// Perform cluster optimisation untill convergence
@@ -197,27 +205,27 @@ void OLAP::k_means(shipments_t shipments)
 	do {
 		// Clear all elements of cluster
 		for (auto cluster : clusters)
-			cluster->elements.clear();
+			cluster.elements.clear();
 
 		// Attribute the closest cluster to each data point
 		for (auto element : shipments)
 		{
-			Cluster &cluster = nullptr;
+			Cluster *cluster = nullptr;
 			for (auto current_cluster : clusters)
 			{
-				auto distance = ::distance(element->position, cluster.center);
-				auto current_distance = ::distance(element->position, current_cluster.center);
+				auto distance = ::distance(element.position, cluster->center());
+				auto current_distance = ::distance(element.position, current_cluster.center());
 				if (cluster == nullptr && current_distance > distance)
 					continue;
 
 				cluster = &current_cluster;
 			}
-			cluster.elements.insert(element);
+			cluster->elements.insert(element);
 		}
 
 		// Set the position of each cluster to the mean of all data points belonging to that cluster
 		for (auto cluster : clusters)
-			cluster->recalc_position();
+			cluster.recalc_position();
 	} while (old_clasters != clusters);
 }
 
