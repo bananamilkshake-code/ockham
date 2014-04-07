@@ -6,6 +6,7 @@ CREATE TABLE suppliers (
 	risk TINYINT(2) CHECK(risk IN (0, 1, 2, 3)),
 	shipments_count INT(10) NOT NULL DEFAULT 0,
 	shipments_delays INT(10) NOT NULL DEFAULT 0,
+	details_count INT(10) NOT NULL DEFAULT 0,
 
 	UNIQUE(name, city, address)
 );
