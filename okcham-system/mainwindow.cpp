@@ -220,6 +220,7 @@ void MainWindow::on_button_classify_clicked()
 
 void MainWindow::on_button_clasterize_clicked()
 {
+	this->perform_clasterisation();
 }
 
 void MainWindow::fill_olap_cube(OLAP::cube_t cube)
@@ -317,6 +318,14 @@ void MainWindow::perform_classification()
 		for (auto row = 0; row < group.size(); row++)
 			this->set_cell(table, row, level, group[row]);
 	}
+}
+
+void MainWindow::perform_clasterisation()
+{
+	auto date_from = this->ui->date_clasterise_from->date();
+	auto date_to = this->ui->date_claterise_to->date();
+
+	this->olap.clasterize(date_from.toString().toStdString(), date_to.toString().toStdString());
 }
 
 void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)
