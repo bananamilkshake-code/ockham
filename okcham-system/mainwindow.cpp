@@ -319,7 +319,22 @@ void MainWindow::perform_classification()
 	}
 }
 
+void MainWindow::find_templates()
+{
+	auto frequency = this->ui->spin_frequency->value();
+	this->ui->list_templates->clear();
+
+	auto templates = this->olap.get_templates(frequency);
+	for (auto element_list : templates)
+		this->ui->list_templates->addItem(element_list);
+}
+
 void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)
 {
 	this->fill_z_values();
+}
+
+void MainWindow::on_button_templates_clicked()
+{
+	this->find_templates();
 }

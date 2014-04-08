@@ -579,16 +579,6 @@
      <attribute name="title">
       <string>Templates</string>
      </attribute>
-     <widget class="QListView" name="list_templates">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>40</y>
-        <width>651</width>
-        <height>441</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QPushButton" name="button_templates">
       <property name="geometry">
        <rect>
@@ -609,6 +599,16 @@
         <y>10</y>
         <width>91</width>
         <height>24</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QListWidget" name="list_templates">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>40</y>
+        <width>651</width>
+        <height>441</height>
        </rect>
       </property>
      </widget>

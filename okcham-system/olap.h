@@ -1,7 +1,9 @@
 #ifndef OLAP_H
 #define OLAP_H
 
+#include <list>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <mysql/mysql.h>
@@ -21,6 +23,9 @@ public:
 	};
 
 	typedef std::map<std::string, std::map<std::string, std::string>> cube_t;
+	typedef std::string date_t;
+	typedef std::map<date_t, std::set<std::string>> details_dates_t;
+	typedef std::list<std::string> templates_t;
 
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
@@ -36,6 +41,7 @@ public:
 
 	const QStringList& get_values_list(Type dimension, uint8_t detalisation);
 	void classify(std::vector<std::string> &low_risk, std::vector<std::string> &middle_risk, std::vector<std::string> &high_risk) const;
+	templates_t get_templates(size_t frequency) const;
 
 private:
 	typedef std::vector<std::vector<QStringList>> values_lists_t;

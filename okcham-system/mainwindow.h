@@ -35,6 +35,8 @@ private slots:
 
 	void on_combo_detalisation_3_currentIndexChanged(int index);
 
+	void on_button_templates_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	OLAP olap;
@@ -52,6 +54,7 @@ private:
 	void fill_z_values();
 
 	void perform_classification();
+	void find_templates();
 
 	std::string get_cron_parameters() const;
 	std::string get_cron_statement() const;

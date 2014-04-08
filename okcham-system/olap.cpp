@@ -94,6 +94,12 @@ void OLAP::classify(std::vector<std::string> &low_risk, std::vector<std::string>
 	}
 }
 
+OLAP::templates_t OLAP::get_templates(size_t frequency) const
+{
+	templates_t templates;
+	return templates;
+}
+
 OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 {
 	if (!result)
