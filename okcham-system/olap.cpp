@@ -204,9 +204,9 @@ void OLAP::clasterize(std::string date_from, std::string date_to) const
 {
 	std::string query ="SELECT "
 			"sp.weight AS weight, "
-			"sp.price AS price,"
-			"sp.qty AS quantity,"
-			"p.name AS part_name,"
+			"sp.price AS price, "
+			"sp.qty AS quantity, "
+			"p.name AS part_name, "
 			"s.city AS city, "
 			"p.weight AS part_weight,"
 			"p.HTP AS htp,"
