@@ -52,7 +52,7 @@ public:
 
 		void recalc_position();
 
-		inline bool operator==(const Cluster &other) const { return this->m == other.m; }
+		inline bool operator==(const Cluster &other) const { return this->elements == other.elements; }
 		inline const Shipment& center() const { return this->m; }
 
 	private:
