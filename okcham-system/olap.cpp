@@ -6,12 +6,7 @@
 #include <sstream>
 #include <random>
 #include <unordered_set>
-/*
-OLAP::position_t operator+(const OLAP::position_t &p1, const OLAP::position_t &p2)
-{
-	return p1;
-}
-*/
+
 const QStringList OLAP::DETALIZATION[] =
 {
 	{"Year", "Month"},
@@ -29,7 +24,111 @@ const std::vector<std::vector<std::string>> OLAP::ROW_NAMES =
 	{"p.htp", "p.name"}	// DETAIL
 };
 
+std::string sum(const std::string &s1, const std::string &s2)
+{
+	auto size = std::max(s1.length(), s2.length());
+	std::string result;
+
+	for (uint8_t i = 0; i < size; i++)
+	{
+		char c1 = (s1.length() > i) ? s1[i] : 0;
+		char c2 = (s2.length() > i) ? s2[i] : 0;
+
+		result += (c1 + c2) / 256;
+	}
+
+	return result;
+}
+
+std::string& operator/=(std::string &s1, const float denominator)
+{
+	for (uint8_t i = 0; i < s1.length(); i++)
+		s1[i] /= denominator;
+
+	return s1;
+}
+
+const OLAP::Shipment& OLAP::Shipment::operator += (const Shipment &other)
+{
+	this->weight += other.weight;
+	this->detail_weight += other.detail_weight;
+	this->price += other.price;
+	this->detail_price += other.detail_price;
+	this->quantity += other.quantity;
+	this->detail_name = sum(this->detail_name, other.detail_name);
+	this->city = sum(this->city, other.city);
+	this->htp += other.htp;
+
+	return *this;
+}
+
+const OLAP::Shipment OLAP::Shipment::operator / (const float denominator)
+{
+	Shipment result = *this;
+
+	result.weight /= denominator;
+	result.detail_weight /= denominator;
+	result.price /= denominator;
+	result.detail_price /= denominator;
+	result.quantity /= denominator;
+	result.detail_name /= denominator;
+	result.city /= denominator;
+	result.htp /= denominator;
+
+	return result;
+}
+
+bool OLAP::Shipment::operator<(const Shipment &other) const
+{
+	return this->hash() < other.hash();
+}
+
+bool OLAP::Shipment::operator==(const Shipment &other) const
+{
+	return abs(this->weight - other.weight) < 0.0001
+	&& abs(this->detail_weight - other.detail_weight) < 0.0001
+	&& abs(this->price - other.price) < 0.0001
+	&& abs(this->detail_price - other.detail_price ) < 0.0001
+	&& this->quantity == other.quantity
+	&& this->detail_name == other.detail_name
+	&& this->city == other.city
+	&& this->htp == other.htp;
+}
+
+float OLAP::Shipment::hash() const
+{
+	return this->weight + this->detail_weight +
+		this->price + this->detail_price +
+		this->quantity + std::hash<std::string>()(this->detail_name) +
+		std::hash<std::string>()(this->city) + this->htp;
+}
+
+void OLAP::Cluster::recalc_position()
+{
+	auto sum = Shipment();
+	for (auto element : this->elements)
+		sum += element;
+
+	this->m = sum / this->elements.size();
+}
+
 const std::string OLAP::ALL = "NULL";
+
+float OLAP::distance(const Shipment &s1, const Shipment &s2)
+{
+	auto d = 0.0;
+
+	d += abs(s1.weight - s2.weight);
+	d += abs(s1.detail_weight - s2.detail_weight);
+	d += abs(s1.price - s2.price);
+	d += abs(s1.detail_price - s2.detail_price);
+	d += abs(s1.quantity - s2.quantity);
+	d += abs(std::hash<std::string>()(s1.detail_name) - std::hash<std::string>()(s2.detail_name));
+	d += abs(std::hash<std::string>()(s1.city) - std::hash<std::string>()(s2.city));
+	d += abs(s1.htp - s2.htp);
+
+	return d;
+}
 
 OLAP::OLAP()
 {
@@ -101,11 +200,6 @@ void OLAP::classify(std::vector<std::string> &low_risk, std::vector<std::string>
 	}
 }
 
-static float distance(const OLAP::position_t &s1, const OLAP::position_t &s2)
-{
-	return 0.0;
-}
-
 void OLAP::clasterize(std::string date_from, std::string date_to) const
 {
 	std::string query ="SELECT "
@@ -173,12 +267,11 @@ OLAP::cube_t OLAP::convert_result(MYSQL_RES *result)
 
 static constexpr uint8_t CLUSTERS_COUNT = 3;
 
-size_t hash_shipment(const OLAP::Shipment &s) { return (size_t)s.position;}
 
 namespace std {
 	template <>
 	struct hash<OLAP::Shipment> {
-		size_t operator() (const OLAP::Shipment &s) const { return hash_shipment(s); }
+		size_t operator() (const OLAP::Shipment &s) const { return s.hash(); }
 	};
 }
 
@@ -213,8 +306,8 @@ void OLAP::k_means(const shipments_t &shipments) const
 			Cluster *cluster = nullptr;
 			for (auto current_cluster : clusters)
 			{
-				auto distance = ::distance(element.position, cluster->center());
-				auto current_distance = ::distance(element.position, current_cluster.center());
+				auto distance = OLAP::distance(element, cluster->center());
+				auto current_distance = OLAP::distance(element, current_cluster.center());
 				if (cluster == nullptr && current_distance > distance)
 					continue;
 

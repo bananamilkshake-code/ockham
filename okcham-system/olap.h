@@ -26,57 +26,48 @@ public:
 
 	struct Shipment
 	{
-		float weight;
-		float detail_weight;
-		float price;
-		float detail_price;
-		uint64_t quantity;
-		std::string detail_name;
-		std::string city;
-		bool htp;
+		float weight = 0.0;
+		float detail_weight = 0.0;
+		float price = 0.0;
+		float detail_price = 0.0;
+		uint64_t quantity = 0;
+		std::string detail_name = "";
+		std::string city = "";
+		bool htp = false;
 
-		position_t position;
+		const Shipment& operator+=(const Shipment &other);
+		const Shipment operator/(const float denominator);
+		bool operator<(const Shipment &other) const;
+		bool operator==(const Shipment &other) const;
 
-		bool operator < (const Shipment &other) const { return this->position < other.position; }
-		bool operator == (const Shipment &other) const { return abs(this->weight - other.weight) < 0.0001
-					&& abs(this->detail_weight - other.detail_weight) < 0.0001
-					&& abs(this->price - other.price) < 0.0001
-					&& abs(this->detail_price - other.detail_price ) < 0.0001
-					&& this->quantity == other.quantity
-					&& this->detail_name == other.detail_name
-					&& this->city == other.city
-					&& this->htp == other.htp
-					&& this->position == other.position; }
+		float hash() const;
 	};
 	typedef std::set<Shipment> shipments_t;
 
 	struct Cluster
 	{
-		Cluster(Shipment center): m(center.position) {}
-
 		shipments_t elements;
 
-		void recalc_position()
-		{
-			auto sum = position_t();
-			for (auto element : this->elements)
-				sum += element.position;
+		Cluster(Shipment center): m(center) {}
 
-			this->m = sum / this->elements.size();
-		}
+		void recalc_position();
 
-		bool operator==(const Cluster &other) const { return abs(this->m - other.m) < 0.0001; }
-		position_t center() const { return this->m; }
+		inline bool operator==(const Cluster &other) const { return this->m == other.m; }
+		inline const Shipment& center() const { return this->m; }
+
 	private:
-		position_t m;
+		Shipment m;
 	};
 	typedef std::list<Cluster> clusters_t;
+
 	typedef std::map<std::string, std::map<std::string, std::string>> cube_t;
 
 	static const QStringList DETALIZATION[];
 	static const std::vector<std::vector<std::string>> ROW_NAMES;
 
 	static const std::string ALL;
+
+	static float distance(const Shipment &s1, const Shipment &s2);
 
 	OLAP();
 	~OLAP();
