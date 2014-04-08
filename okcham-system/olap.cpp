@@ -277,15 +277,19 @@ namespace std {
 
 void OLAP::k_means(const shipments_t &shipments) const
 {
+	if (shipments.empty())
+		return;
+
 	clusters_t clusters;
 
 	// Initialize clusters: choose random element to be centers.
 	std::unordered_set<Shipment> used_elements;
 	for (uint8_t i = 0; i < CLUSTERS_COUNT; i++)
 	{
-		auto element = shipments.begin();
+		shipments_t::iterator element;
 		do {
-			auto random_index = 0;
+			element = shipments.begin();
+			auto random_index = rand() % shipments.size();
 			std::advance(element, random_index);
 		} while(used_elements.count(*element));
 
@@ -294,8 +298,11 @@ void OLAP::k_means(const shipments_t &shipments) const
 	}
 
 	// Perform cluster optimisation untill convergence
-	clusters_t old_clasters = clusters;
-	do {
+	clusters_t old_clusters;
+	while (true)
+	{
+		old_clusters = clusters;
+
 		// Clear all elements of cluster
 		for (auto cluster : clusters)
 			cluster.elements.clear();
@@ -304,11 +311,17 @@ void OLAP::k_means(const shipments_t &shipments) const
 		for (auto element : shipments)
 		{
 			Cluster *cluster = nullptr;
-			for (auto current_cluster : clusters)
+			for (auto &current_cluster : clusters)
 			{
-				auto distance = OLAP::distance(element, cluster->center());
 				auto current_distance = OLAP::distance(element, current_cluster.center());
-				if (cluster == nullptr && current_distance > distance)
+				if (cluster == nullptr)
+				{
+					cluster = &current_cluster;
+					continue;
+				}
+
+				auto distance = OLAP::distance(element, cluster->center());
+				if (current_distance > distance)
 					continue;
 
 				cluster = &current_cluster;
@@ -319,7 +332,10 @@ void OLAP::k_means(const shipments_t &shipments) const
 		// Set the position of each cluster to the mean of all data points belonging to that cluster
 		for (auto cluster : clusters)
 			cluster.recalc_position();
-	} while (old_clasters != clusters);
+
+		if (old_clusters == clusters)
+			break;
+	}
 }
 
 void OLAP::fill_values()
