@@ -537,6 +537,9 @@
         <height>24</height>
        </rect>
       </property>
+      <property name="displayFormat">
+       <string>yyyy-MM-dd</string>
+      </property>
      </widget>
      <widget class="QDateEdit" name="date_claterise_to">
       <property name="geometry">
@@ -546,6 +549,9 @@
         <width>110</width>
         <height>24</height>
        </rect>
+      </property>
+      <property name="displayFormat">
+       <string>yyyy-MM-dd</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_claster_from">

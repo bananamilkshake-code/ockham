@@ -322,10 +322,10 @@ void MainWindow::perform_classification()
 
 void MainWindow::perform_clasterisation()
 {
-	auto date_from = this->ui->date_clasterise_from->date();
-	auto date_to = this->ui->date_claterise_to->date();
+	auto date_from = this->ui->date_clasterise_from->date().toString("yyyy-MM-dd").toStdString();
+	auto date_to = this->ui->date_claterise_to->date().toString("yyyy-MM-dd").toStdString();
 
-	this->olap.clasterize(date_from.toString().toStdString(), date_to.toString().toStdString());
+	this->olap.clasterize(date_from, date_to);
 }
 
 void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)

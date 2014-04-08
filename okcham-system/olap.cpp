@@ -210,8 +210,8 @@ void OLAP::clasterize(std::string date_from, std::string date_to) const
 			"s.city AS city, "
 			"p.weight AS part_weight,"
 			"p.HTP AS htp,"
-			"sp.part_price AS part_price"
-		"FROM (SELECT * FROM shipments WHERE order_date BETWEEN " + date_from + " AND " + date_to + " ) sp"
+			"sp.part_price AS part_price "
+		"FROM (SELECT * FROM shipments WHERE order_date BETWEEN \"" + date_from + "\" AND \"" + date_to + "\") sp "
 		"LEFT JOIN parts p ON sp.pid = p.id "
 		"LEFT JOIN suppliers s ON sp.sid = s.id "
 		"WHERE p.name IS NOT NULL";
