@@ -1,16 +1,21 @@
+DROP DATABASE IF EXISTS company;
+CREATE DATABASE company;
+
+USE company;
+
 CREATE TABLE P (
-  PID int PRIMARY KEY,
-  PName varchar DEFAULT NULL,
-  HTP tinyint DEFAULT NULL,
+  PID int(10) PRIMARY KEY,
+  PName varchar(50) DEFAULT NULL,
+  HTP tinyint(1) DEFAULT NULL,
   Weight float DEFAULT NULL
 );
 
 CREATE TABLE S (
   SID int PRIMARY KEY,
-  SName varchar DEFAULT NULL,
-  SCity varchar DEFAULT NULL,
-  Address varchar DEFAULT NULL,
-  Risk tinyint DEFAULT NULL
+  SName varchar(50) DEFAULT NULL,
+  SCity varchar(50) DEFAULT NULL,
+  Address varchar(100) DEFAULT NULL,
+  Risk tinyint(1) DEFAULT NULL
 );
 
 CREATE TABLE SP (
