@@ -32,7 +32,7 @@ class Company
 			SCity IS NOT NULL AND \
 			Address IS NOT NULL"
 
-	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
+	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,3)) AS Weight FROM P \
 			WHERE PID BETWEEN %i AND %i AND
 			PName IS NOT NULL AND \
 			HTP IN (0,1) AND \
@@ -45,14 +45,14 @@ class Company
 			S.Risk AS Risk, \
 			P.PName AS Part, \
 			P.HTP AS HTP, \
-			CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
+			CAST(P.Weight AS DECIMAL(8,3)) AS PartWeight, \
 			SP.Qty AS Quantity, \
 			SP.OrderDate AS OrderDate, \
 			SP.Period AS Period, \
 			SP.ShipDate AS ShipDate, \
-			CAST(SP.Price AS DECIMAL(8,4)) AS PartPrice, \
-			CAST((SP.Price * SP.Qty) AS DECIMAL(8,4)) AS Price, \
-			CAST((P.Weight * SP.Qty) AS DECIMAL(8,4)) AS SPWeight \
+			CAST(SP.Price AS DECIMAL(8,2)) AS PartPrice, \
+			CAST((SP.Price * SP.Qty) AS DECIMAL(8,2)) AS Price, \
+			CAST((P.Weight * SP.Qty) AS DECIMAL(8,3)) AS SPWeight \
 		FROM SP \
 		INNER JOIN S ON S.SID = SP.SID \
 		INNER JOIN P ON P.PID = SP.PID \
@@ -191,7 +191,7 @@ class Company
 			by_name[address] = id
 		end
 
-		parts_ids = @storage.query('SELECT id, name, CAST(weight AS DECIMAL(8,4)) as weight FROM parts WHERE (name, CAST(weight AS DECIMAL(8,4))) IN (' + parts_values + ')')
+		parts_ids = @storage.query('SELECT id, name, CAST(weight AS DECIMAL(8,3)) as weight FROM parts WHERE (name, CAST(weight AS DECIMAL(8,3))) IN (' + parts_values + ')')
 
 		pids = Hash.new
 		parts_ids.each_hash do |part|
