@@ -164,7 +164,7 @@ def gen_address():
 		"Kitano St.",
 		"Yellow Blvd.",
 		"Red Blvd.",
-		"Summer Ave."
+		"Summer Ave.",
 		"Sunny Ave.",
 		"Leaf St.",
 		"Old St.",
