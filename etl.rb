@@ -5,6 +5,20 @@ require 'sqlite3'
 require 'thread'
 require 'bigdecimal'
 
+def get_quoted_values(hashes, keys)
+	result = String.new
+	hashes.each do |hash|
+		result << ',' unless result.empty?
+			values = String.new
+			keys.each do |key|
+				values << ',' unless values.empty?
+				values << hash[key].inspect
+			end
+		result << '(' << values << ')'
+	end
+	return result
+end
+
 class Company
 	@@query_max_ids = "SELECT s.max_id AS SID, p.max_id AS PID, sp.max_id AS SPID \
 			FROM \
@@ -21,21 +35,24 @@ class Company
 	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,4)) AS Weight FROM P \
 			WHERE PID BETWEEN %i AND %i AND
 			PName IS NOT NULL AND \
+			HTP IN (0,1) AND \
 			Weight > 0"
 
 	@@query_shipments = "SELECT \
 			S.SName AS Supplier, \
 			S.Address AS Address, \
 			S.SCity AS City, \
+			S.Risk AS Risk, \
 			P.PName AS Part, \
+			P.HTP AS HTP, \
 			CAST(P.Weight AS DECIMAL(8,4)) AS PartWeight, \
 			SP.Qty AS Quantity, \
 			SP.OrderDate AS OrderDate, \
 			SP.Period AS Period, \
 			SP.ShipDate AS ShipDate, \
-			Sp.Price AS PartPrice, \
-			SP.Price * SP.Qty AS Price, \
-			P.Weight * SP.Qty AS SPWeight \
+			CAST(SP.Price AS DECIMAL(8,4)) AS PartPrice, \
+			CAST((SP.Price * SP.Qty) AS DECIMAL(8,4)) AS Price, \
+			CAST((P.Weight * SP.Qty) AS DECIMAL(8,4)) AS SPWeight \
 		FROM SP \
 		INNER JOIN S ON S.SID = SP.SID \
 		INNER JOIN P ON P.PID = SP.PID \
@@ -44,8 +61,10 @@ class Company
 			S.SName IS NOT NULL AND \
 			S.SCity IS NOT NULL AND \
 			S.Address IS NOT NULL AND \
+			S.Risk IN (1,2,3) AND \
 			P.PName IS NOT NULL AND \
 			P.Weight > 0 AND \
+			P.HTP IN (0,1) AND \
 			SP.OrderDate IS NOT NULL AND \
 			SP.Qty > 0 AND \
 			SP.Price > 0 AND \
@@ -92,7 +111,6 @@ class Company
 
 	def load
 		return if @shipments_query == nil
-		puts @shipments_query
 		@storage.query(@shipments_query)
 		@storage.query("INSERT INTO updates (time, affiliate_id, s, p, sp) VALUES (UNIX_TIMESTAMP(), #{@affiliate_id}, #{@max_s}, #{@max_p}, #{@max_sp})")
 
@@ -117,7 +135,7 @@ class Company
 
 	protected
 	def add_supplier supplier
-		@suppliers << {:name => supplier["name"], :city => supplier["city"], :address => supplier["address"], :orders => supplier["orders"], :delays => ["delays"]}
+		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"]}
 	end
 
 	protected
@@ -136,26 +154,14 @@ class Company
 	protected
 	def create_suppliers
 		return if @suppliers.empty?
-
-		suppliers_values = String.new
-		@suppliers.each do |supplier|
-			suppliers_values << ',' if not suppliers_values.empty?
-			suppliers_values << '("' << supplier[:name] << '","' << supplier[:address] << '","' << supplier[:city] << '")'
-		end
-
+		suppliers_values = get_quoted_values(@suppliers, [:name, :address, :city])
 		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city) VALUES" + suppliers_values)
 	end
 
 	protected	
 	def create_parts
 		return if @parts.empty?
-
-		parts_values = String.new
-		@parts.each do |part|
-			parts_values << ',' if not parts_values.empty?
-			parts_values << '("'	<< part[:name] << '",' << part[:htp] << ',' << part[:weight] << ')'
-		end
-
+		parts_values = get_quoted_values(@parts, [:name, :htp, :weight])
 		@storage.query "INSERT IGNORE INTO parts(name, HTP, weight) VALUES" + parts_values
 	end
 
@@ -163,15 +169,8 @@ class Company
 	def create_shipments
 		return if @shipments.empty?
 
-		suppliers_values = String.new
-		parts_values = String.new
-		@shipments.each do |shipment|
-			suppliers_values << ',' if not suppliers_values.empty?
-			suppliers_values << '('	<< shipment[:supplier].inspect << ',' << shipment[:address].inspect << ',' << shipment[:city].inspect << ')'
-
-			parts_values << ',' if not parts_values.empty?
-			parts_values << '(' << shipment[:part].inspect << ',' << shipment[:part_weight] << ')'
-		end
+		suppliers_values = get_quoted_values(@shipments, [:supplier, :address, :city])
+		parts_values = get_quoted_values(@shipments, [:part, :part_weight])
 
 		supplier_ids = @storage.query('SELECT id, name, address, city FROM suppliers WHERE (name, address, city) IN (' + suppliers_values + ')')
 
@@ -212,6 +211,7 @@ class Company
 
 		shipments_values = String.new
 		@shipments.each do |shipment|
+			puts shipment
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
 						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:part_price] << ',' << shipment[:weight] << ',' \
@@ -486,7 +486,7 @@ class Classificator
 
 		return {best_attribute => conditions}
 	end
-end
+end 
 
 def classify storage
 	# Получаем информацию о поставщиках
@@ -510,7 +510,7 @@ begin
 		#AffiliateTwo
 	]
 
-	last_ids = Array.new(databases.count) {{:last_sid => 1, :last_pid => 1, :last_spid => 1}}
+	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
 
 	storage = Mysql.init
 	storage.options(Mysql::SET_CHARSET_NAME, 'utf8')
@@ -545,8 +545,6 @@ begin
 		}
 	end
 	threads.each {|t| t.join}
-
-	classify storage
 
 	storage.close
 
