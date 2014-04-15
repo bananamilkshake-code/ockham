@@ -89,21 +89,14 @@ def gen_date(begin=0, delta=0):
 		date = (datetime.datetime(begin.year, begin.month, begin.day) + datetime.timedelta(days=delta + random.randrange(-10, +10))).date()
 	return date
 
+def gen_int(range_l, range_r):
+	return random.randrange(range_l, range_r + 1)
 
-def normal_distribution(x):
-	return x
-
-def weight_distribution(x):
-	return 1.0 / x;
-
-def gen_int(range_l, range_r, fun=normal_distribution):
-	return fun(random.randrange(range_l, range_r + 1))
-
-def gen_float(range_l, range_r, fun=normal_distribution):
-	return fun(random.uniform(range_l, range_r))
+def gen_float(range_l, range_r):
+	return random.uniform(range_l, range_r)
 
 def quote_string(string):
-	return  '"' + string + '"'
+	return '"' + string + '"'
 
 # Supplier generation
 def gen_supplier_name():
@@ -205,7 +198,6 @@ def generate_suppliers(file_name, number, error):
 		address = gen_address()
 		risk = gen_int(1, 3)
 		if is_error(error):
-			#print name, city, address, risk
 			CITY_ERROR = 2
 			ADDRESS_ERROR = 3
 			RISK_ERROR = 4
@@ -216,8 +208,6 @@ def generate_suppliers(file_name, number, error):
 				address = error_line(address)
 			elif error_field == RISK_ERROR:
 				risk = error_number(risk)
-			#print error_field
-			#print name, city, address, risk
 		supplier_file.write("%s,%s,%s,%s,%s\n" % (i, name, city, address, risk))
 	supplier_file.close()
 
@@ -226,9 +216,8 @@ def generate_parts(file_name, number, error):
 	for i in range(number):
 		name = gen_part_name()
 		htp = gen_int(0, 1)
-		weight = gen_float(0.1, 1500, weight_distribution)
+		weight = gen_float(0.001, 15.0)
 		if is_error(error):
-			#print name, htp, weight
 			NAME_ERROR = 1
 			HTP_ERROR = 2
 			WEIGHT_ERROR = 3
@@ -237,8 +226,6 @@ def generate_parts(file_name, number, error):
 				htp = error_number(htp)
 			elif error_field == WEIGHT_ERROR:
 				weight = error_number(weight)
-			#print error_field
-			#print name, htp, weight
 		part_file.write("%s,%s,%s,%s\n" % (i, name, htp, weight))
 	part_file.close()
 
@@ -249,12 +236,11 @@ def generate_shipments(file_name, number, error, suppliers_qty, parts_qty):
 		sid = random.randrange(1, suppliers_qty)
 		pid = random.randrange(1, parts_qty)
 		qty = gen_int(1, 100)
-		price = gen_float(0.1, 1000)
+		price = gen_float(0.001, 10.0)
 		order_date = gen_date()
 		period = gen_int(0, 60)
 		ship_date = gen_date(order_date, period)
 		if is_error(error):
-			#print sid, pid, qty, price, order_date, period, ship_date 
 			QUANTITY_ERROR = 1
 			PRICE_ERROR = 2
 			DATE_ERROR = 3
@@ -268,8 +254,6 @@ def generate_shipments(file_name, number, error, suppliers_qty, parts_qty):
 				order_date, ship_date = error_dates(order_date, ship_date)
 			elif error_field == PERIOD_ERROR:
 				period = error_number(period)
-			#print error_field
-			#print sid, pid, qty, price, order_date, period, ship_date
 		relation_file.write("%s,%s,%s,%s,%s,\"%s\",%s,\"%s\"\n" % (i + 1, sid, pid, qty, price, order_date, period, ship_date))
 	relation_file.close()
 
