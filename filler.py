@@ -30,10 +30,7 @@ def genParser():
 	return parser
 
 def is_error(percent):
-	e = random.randrange(0, 100)
-	error = e < percent
-	if error:
-		print "Aha"
+	error = random.randrange(0, 100) < percent
 	return error
 
 # Make an error in value
@@ -105,6 +102,9 @@ def gen_int(range_l, range_r, fun=normal_distribution):
 def gen_float(range_l, range_r, fun=normal_distribution):
 	return fun(random.uniform(range_l, range_r))
 
+def quote_string(string):
+	return  '"' + string + '"'
+
 # Supplier generation
 def gen_supplier_name():
 	supplier_names = [
@@ -135,7 +135,7 @@ def gen_supplier_name():
 		"Philips"
 	]
 
-	return random.choice(supplier_names)
+	return quote_string(random.choice(supplier_names))
 
 def gen_city():
 	cities = [
@@ -156,7 +156,7 @@ def gen_city():
 		"Цюрих"
 	]
 
-	return random.choice(cities)
+	return quote_string(random.choice(cities))
 
 def gen_address():
 	streets = [
@@ -174,7 +174,7 @@ def gen_address():
 		"Greeting Ave."
 	]
 
-	return random.choice(streets) + ", " + str(gen_int(1, 100)) + "-" + str(gen_int(1, 100))
+	return quote_string(random.choice(streets) + ", " + str(gen_int(1, 100)) + "-" + str(gen_int(1, 100)))
 
 # Part generation
 def gen_part_name():
@@ -195,7 +195,7 @@ def gen_part_name():
 		"Измельчитель"
 	]
 
-	return random.choice(part_names)
+	return quote_string(random.choice(part_names))
 
 def generate_suppliers(file_name, number, error):
 	supplier_file = open(file_name, "w")
@@ -206,14 +206,11 @@ def generate_suppliers(file_name, number, error):
 		risk = gen_int(1, 3)
 		if is_error(error):
 			#print name, city, address, risk
-			NAME_ERROR = 1
 			CITY_ERROR = 2
 			ADDRESS_ERROR = 3
 			RISK_ERROR = 4
-			error_field = random.choice([NAME_ERROR, CITY_ERROR, ADDRESS_ERROR, RISK_ERROR])
-			if error_field == NAME_ERROR:
-				name = error_line(name)
-			elif error_field == CITY_ERROR:
+			error_field = random.choice([CITY_ERROR, ADDRESS_ERROR, RISK_ERROR])
+			if  error_field == CITY_ERROR:
 				city = error_line(city)
 			elif error_field == ADDRESS_ERROR:
 				address = error_line(address)
@@ -221,7 +218,7 @@ def generate_suppliers(file_name, number, error):
 				risk = error_number(risk)
 			#print error_field
 			#print name, city, address, risk
-		supplier_file.write("%s,\"%s\",\"%s\",\"%s\",%s\n" % (i, name, city, address, risk))
+		supplier_file.write("%s,%s,%s,%s,%s\n" % (i, name, city, address, risk))
 	supplier_file.close()
 
 def generate_parts(file_name, number, error):
@@ -236,15 +233,13 @@ def generate_parts(file_name, number, error):
 			HTP_ERROR = 2
 			WEIGHT_ERROR = 3
 			error_field = random.choice([NAME_ERROR, HTP_ERROR, WEIGHT_ERROR])
-			if error_field == NAME_ERROR:
-				name = error_line(name)
-			elif error_field == HTP_ERROR:
+			if error_field == HTP_ERROR:
 				htp = error_number(htp)
 			elif error_field == WEIGHT_ERROR:
 				weight = error_number(weight)
 			#print error_field
 			#print name, htp, weight
-		part_file.write("%s,\"%s\",%s,%s\n" % (i, name, htp, weight))
+		part_file.write("%s,%s,%s,%s\n" % (i, name, htp, weight))
 	part_file.close()
 
 def generate_shipments(file_name, number, error, suppliers_qty, parts_qty):
