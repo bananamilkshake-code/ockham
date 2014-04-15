@@ -51,7 +51,7 @@ OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Typ
 		row_name_1 << " AS dim_1," <<
 		row_name_2 << " AS dim_2," <<
 		row_name_3 << " AS dim_3, " <<
-		"SUM(sp.price) "
+		"CAST(SUM(sp.price) AS DECIMAL(8,2)) "
 		"FROM shipments sp "
 		"INNER JOIN suppliers s ON s.id = sp.sid "
 		"INNER JOIN parts p ON p.id = sp.pid "
@@ -61,7 +61,7 @@ OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Typ
 			row_name_1 << " AS dim_1," <<
 			row_name_2 << " AS dim_2," <<
 			row_name_3 << " AS dim_3, " <<
-			"SUM(sp.price) "
+			"CAST(SUM(sp.price) AS DECIMAL(8,2)) "
 		"FROM shipments sp "
 		"INNER JOIN suppliers s ON s.id = sp.sid "
 		"INNER JOIN parts p ON p.id = sp.pid "
