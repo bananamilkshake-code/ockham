@@ -69,6 +69,7 @@ class Company
 			SP.Qty > 0 AND \
 			SP.Price > 0 AND \
 			SP.Period >= 0 AND \
+			SP.OrderDate <= CURDATE() AND \
 			SP.OrderDate <= SP.ShipDate \
 		HAVING SPWeight BETWEEN 0 AND 1500"
 
@@ -211,7 +212,6 @@ class Company
 
 		shipments_values = String.new
 		@shipments.each do |shipment|
-			puts shipment
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
 						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:part_price] << ',' << shipment[:weight] << ',' \
