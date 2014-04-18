@@ -26,7 +26,7 @@
       <x>0</x>
       <y>0</y>
       <width>651</width>
-      <height>551</height>
+      <height>511</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -457,19 +457,6 @@
        <bool>false</bool>
       </attribute>
      </widget>
-    </widget>
-    <widget class="QWidget" name="tab_clasterisation">
-     <attribute name="title">
-      <string>Clasterisation</string>
-     </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_Classification">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <attribute name="title">
-      <string>Classification</string>
-     </attribute>
     </widget>
    </widget>
   </widget>
