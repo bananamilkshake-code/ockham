@@ -30,7 +30,8 @@ class Company
 			WHERE SID BETWEEN %i AND %i AND \
 			SName IS NOT NULL AND \
 			SCity IS NOT NULL AND \
-			Address IS NOT NULL"
+			Address IS NOT NULL AND \
+			Risk IN (1,2,3)"
 
 	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,3)) AS Weight FROM P \
 			WHERE PID BETWEEN %i AND %i AND
@@ -136,7 +137,7 @@ class Company
 
 	protected
 	def add_supplier supplier
-		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"]}
+		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"], :risk => supplier["Risk"]}
 	end
 
 	protected
@@ -155,15 +156,15 @@ class Company
 	protected
 	def create_suppliers
 		return if @suppliers.empty?
-		suppliers_values = get_quoted_values(@suppliers, [:name, :address, :city])
-		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city) VALUES" + suppliers_values)
+		suppliers_values = get_quoted_values(@suppliers, [:name, :address, :city, :risk])
+		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city, risk) VALUES %s ON DUPLICATE KEY UPDATE risk = IF(risk = VALUES(risk), risk, NULL)" % [suppliers_values])
 	end
 
 	protected	
 	def create_parts
 		return if @parts.empty?
 		parts_values = get_quoted_values(@parts, [:name, :htp, :weight])
-		@storage.query "INSERT IGNORE INTO parts(name, HTP, weight) VALUES" + parts_values
+		@storage.query "INSERT IGNORE INTO parts(name, HTP, weight) VALUES " + parts_values
 	end
 
 	protected	
@@ -223,9 +224,10 @@ class Company
 	end
 end
 
-class AffiliateOne < Company
-	def initialize(storage, affiliate_id, last_s, last_p, last_sp)
+class Affiliate < Company
+	def initialize(database, storage, affiliate_id, last_s, last_p, last_sp)
 		super(storage, affiliate_id, last_s, last_p, last_sp)
+		@database = database
 	end
 
 	protected
@@ -233,7 +235,7 @@ class AffiliateOne < Company
 		begin
 			@con = Mysql.init
 			@con.options(Mysql::SET_CHARSET_NAME, 'utf8')
-			@con.real_connect('localhost', 'root', 'finncrisporiginal', 'company')
+			@con.real_connect('localhost', 'root', 'finncrisporiginal', @database)
 		rescue Mysql::Error => e
 			puts e.errno
 			puts e.error
@@ -304,90 +306,12 @@ class AffiliateOne < Company
 	end
 end
 
-class AffiliateTwo < Company
-	def initialize(storage, affiliate_id, last_s, last_p, last_sp)
-		super(storage, affiliate_id, last_s, last_p, last_sp)
-	end
-
-	protected
-	def create_connection
-		begin
-			@con = SQLite3::Database.new "company.db"
-			@con.results_as_hash = true
-		rescue SQLite3::Exception => e
-			puts e
-			self.close_connection
-		end		
-	end
-
-	protected
-	def close_connection
-		@con.close if @con
-	end
-
-	protected
-	def extract_max_ids
-		begin
-			@con.execute(@@query_max_ids) do |row|
-				@max_s = row['SID'] unless row['SID'] == nil
-				@max_p = row['PID'] unless row['PID'] == nil
-				@max_sp = row['SPID'] unless row['SPID'] == nil
-			end
-		rescue SQLite3::Exception => e
-			puts e
-			self.close_connection
-		end
-	end
-
-	protected
-	def extract_suppliers
-		begin
-			@suppliers = Array.new
-			@con.execute(@@query_suppliers % [@last_s + 1, @max_s]) do |row|
-				self.add_supplier
-			end
-		rescue SQLite3::Exception => e
-			puts e
-			self.close_connection
-		end
-	end
-
-	protected
-	def extract_parts
-		begin
-			@parts = Array.new
-			@con.execute(@@query_parts % [@last_p + 1, @max_p]) do |row|
-				self.add_part row
-			end
-		rescue SQLite3::Exception => e
-			puts e
-			self.close_connection
-		end
-	end
-	
-	protected
-	def extract_shipments
-		begin
-			@shipments = Array.new
-			@con.execute(@@query_shipments % [@last_sp + 1, @max_sp]) do |row|
-				self.add_shipment row
-			end
-		rescue SQLite3::Exception => e 	
-			puts e
-			self.close_connection
-		end
-	end
-end
-
 begin
 	puts 'Start ETL process'
 
-	databases = [
-		AffiliateOne,
-		#AffiliateTwo
-	]
+	companies = ["company1", "company2"]
 
-	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
+	last_ids = Array.new(companies.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
 
 	storage = Mysql.init
 	storage.options(Mysql::SET_CHARSET_NAME, 'utf8')
@@ -401,7 +325,7 @@ begin
 	res.each_hash do |row|
 		affiliate_id = row['affiliate_id'].to_i
 
-		if affiliate_id >= databases.count
+		if affiliate_id >= companies.count
 			puts "Too big 'affiliate_id' value (#{affiliate_id}) in 'updates' table"
 			next
 		end
@@ -412,9 +336,9 @@ begin
 	end
 
 	threads = []
-	databases.each_with_index do |database, i|
+	companies.each_with_index do |database, i|
 		threads << Thread.new() {
-			affiliate = database.new(storage, i, last_ids[i][:last_sid], last_ids[i][:last_pid], last_ids[i][:last_spid])
+			affiliate = Affiliate.new(database, storage, i, last_ids[i][:last_sid], last_ids[i][:last_pid], last_ids[i][:last_spid])
 
 			affiliate.extract()
 			affiliate.transform()

@@ -1,0 +1,32 @@
+DROP DATABASE IF EXISTS company2;
+CREATE DATABASE company2;
+
+USE company2;
+
+CREATE TABLE P (
+  PID int(10) PRIMARY KEY,
+  PName varchar(50) DEFAULT NULL,
+  HTP tinyint(1) DEFAULT NULL,
+  Weight float DEFAULT NULL
+);
+
+CREATE TABLE S (
+  SID int PRIMARY KEY,
+  SName varchar(50) DEFAULT NULL,
+  SCity varchar(50) DEFAULT NULL,
+  Address varchar(100) DEFAULT NULL,
+  Risk tinyint(1) DEFAULT NULL
+);
+
+CREATE TABLE SP (
+  SPID int PRIMARY KEY,
+  SID int DEFAULT NULL,
+  PID int DEFAULT NULL,
+  Qty int DEFAULT NULL,
+  Price float DEFAULT NULL,
+  OrderDate date DEFAULT NULL,
+  Period int DEFAULT NULL,
+  ShipDate date DEFAULT NULL,
+  FOREIGN KEY (SID) REFERENCES S (SID) ON DELETE SET NULL,
+  FOREIGN KEY (PID) REFERENCES P (PID) ON DELETE SET NULL
+);
