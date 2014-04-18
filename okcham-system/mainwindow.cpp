@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 
 	this->set_olap_dimensions();
-	this->perform_classification();
 }
 
 MainWindow::~MainWindow()
@@ -215,7 +214,6 @@ void MainWindow::on_button_olap_clicked()
 
 void MainWindow::on_button_classify_clicked()
 {
-	this->perform_classification();
 }
 
 void MainWindow::on_button_clasterize_clicked()
@@ -294,30 +292,6 @@ enum RiskGroups : uint8_t
 
 	MAX_RISK_GROUP
 };
-
-void MainWindow::perform_classification()
-{
-	std::vector<suppliers_names_t> risks_groups(MAX_RISK_GROUP);
-
-	this->olap.classify(risks_groups[LOW], risks_groups[MIDDLE], risks_groups[HIGH]);
-
-	auto size = std::max(risks_groups[LOW].size(), std::max(risks_groups[MIDDLE].size(), risks_groups[HIGH].size()));
-
-	auto table = this->ui->table_classification;
-
-	this->clear_table(table);
-	this->add_col(table, "Low");
-	this->add_col(table, "Middle");
-	this->add_col(table, "High");
-	table->setRowCount(size);
-
-	for (auto level = 0; level < MAX_RISK_GROUP; level++)
-	{
-		auto &group = risks_groups[level];
-		for (auto row = 0; row < group.size(); row++)
-			this->set_cell(table, row, level, group[row]);
-	}
-}
 
 void MainWindow::on_combo_detalisation_3_currentIndexChanged(int index)
 {
