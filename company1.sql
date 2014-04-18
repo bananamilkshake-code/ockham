@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS company;
-CREATE DATABASE company;
+DROP DATABASE IF EXISTS company1;
+CREATE DATABASE company1;
 
-USE company;
+USE company1;
 
 CREATE TABLE P (
   PID int(10) PRIMARY KEY,
