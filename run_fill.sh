@@ -1,4 +1,4 @@
-#/usrt/bin/sh
+#!/usr/bin/sh
 
 ./filler.py -sname=S.csv -pname=P.csv -spname=SP.csv
 mysql --user='root' --password='finncrisporiginal' < company_scheme.sql
