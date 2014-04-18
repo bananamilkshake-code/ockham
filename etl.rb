@@ -30,7 +30,8 @@ class Company
 			WHERE SID BETWEEN %i AND %i AND \
 			SName IS NOT NULL AND \
 			SCity IS NOT NULL AND \
-			Address IS NOT NULL"
+			Address IS NOT NULL AND \
+			Risk IN (1,2,3)"
 
 	@@query_parts = "SELECT PName, HTP, CAST(Weight AS DECIMAL(8,3)) AS Weight FROM P \
 			WHERE PID BETWEEN %i AND %i AND
@@ -136,7 +137,7 @@ class Company
 
 	protected
 	def add_supplier supplier
-		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"]}
+		@suppliers << {:name => supplier["SName"], :city => supplier["SCity"], :address => supplier["Address"], :risk => supplier["Risk"]}
 	end
 
 	protected
@@ -155,15 +156,15 @@ class Company
 	protected
 	def create_suppliers
 		return if @suppliers.empty?
-		suppliers_values = get_quoted_values(@suppliers, [:name, :address, :city])
-		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city) VALUES" + suppliers_values)
+		suppliers_values = get_quoted_values(@suppliers, [:name, :address, :city, :risk])
+		@storage.query ("INSERT IGNORE INTO suppliers(name, address, city, risk) VALUES %s ON DUPLICATE KEY UPDATE risk = IF(risk = VALUES(risk), risk, NULL)" % [suppliers_values])
 	end
 
 	protected	
 	def create_parts
 		return if @parts.empty?
 		parts_values = get_quoted_values(@parts, [:name, :htp, :weight])
-		@storage.query "INSERT IGNORE INTO parts(name, HTP, weight) VALUES" + parts_values
+		@storage.query "INSERT IGNORE INTO parts(name, HTP, weight) VALUES " + parts_values
 	end
 
 	protected	
@@ -344,7 +345,7 @@ class AffiliateTwo < Company
 		begin
 			@suppliers = Array.new
 			@con.execute(@@query_suppliers % [@last_s + 1, @max_s]) do |row|
-				self.add_supplier
+				self.add_supplier row
 			end
 		rescue SQLite3::Exception => e
 			puts e
@@ -384,7 +385,7 @@ begin
 
 	databases = [
 		AffiliateOne,
-		#AffiliateTwo
+		AffiliateTwo
 	]
 
 	last_ids = Array.new(databases.count) {{:last_sid => 0, :last_pid => 0, :last_spid => 0}}
