@@ -222,7 +222,7 @@ Transform, Load)}, поскольку данный процесс осущест
 
 \begin{figure}[h]
   \centering
-  \includegraphics[scale=0.8]{etl-diagram.png}
+  \includegraphics[scale=0.8]{etl-model.png}
   \caption{Сема хранилища данных}
   \label{etl-diagram}
 \end{figure}
@@ -244,6 +244,12 @@ Transform, Load)}, поскольку данный процесс осущест
 		4. & address & & Адрес поставщика & VARCHAR(20) \\
 		\hline
 		5. & risk & & Риск поставщика & TINYINT(2) \\
+		\hline
+		6. & shipments\_count & & Количество поставок & INT(10) \\
+		\hline
+		7. & shipments\_delays & & Количество поставок, доставленных позже указанного срока & INT(10) \\
+		\hline
+		8. & details\_count & & количество поставленных деталей & INT(10) \\
 		\hline
 	\end{tabular}
 \end{table}
@@ -281,15 +287,17 @@ Transform, Load)}, поскольку данный процесс осущест
 		\hline
 		3. & qty & & Количество деталей в поставке & SMALLINT \\
 		\hline
-		4. & price & & Цена поставки & SMALLINT \\
+		4. & part\_price & & Цена детали & SMALLINT \\
 		\hline
-		5. & weight & & Вес поставки & FLOAT \\
+		5. & price & & Цена поставки & SMALLINT \\
 		\hline
-		6. & order\_date & & Дата заказа поставки & INT(10) \\
+		6. & weight & & Вес поставки & FLOAT \\
 		\hline
-		7. & period & & Время поставки & TINYINT(3) \\
+		7. & order\_date & & Дата заказа поставки & INT(10) \\
 		\hline
-		8. & ship\_date & & Дата поставки & INT(10) \\
+		8. & period & & Время поставки & TINYINT(3) \\
+		\hline
+		9. & ship\_date & & Дата поставки & INT(10) \\
 		\hline
 	\end{tabular}
 \end{table}
@@ -316,9 +324,116 @@ Transform, Load)}, поскольку данный процесс осущест
 \end{table}
 
 \subsection{ETL}
+На рис.~\ref{etl-module} представлена Модульная структура программы, реализующая функции извлечения данных из источников, преобразования и очистки данных, загрузки данных в хранилище.
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.6]{etl-module.png}
+  \caption{Модульная структура программы ETL}
+  \label{etl-module}
+\end{figure}
 \subsection{Функции OLAP}
-\subsection{Функции интеллектуального анализа данных}
+Для выполнения функции OLAP необходимо выполнить запрос к хранилищу. Для получения OLAP куба ипользуются такие функции SQL как CUBE BY и ROLLUP BY. В MySQL есть только реализиция модификатора WITH ROLLUP для условия GROUP BY. В следствие этого потребуется присоединять дополнительную выборку, которая будет выполнять GROUP BY ... WITH ROLLUP для набора данных с группировкой измерений в другом порядке.
 \subsection{Интерфейс пользователя}
+Интерфейс приложения должен обеспечивать запуск процесса ETL, а так же выполнение вычисления OLAP куба (его срезов). Для этого на главной форме приложения был размещен объект с переключаемыми вкладками. На каждой вкладке были размещены управляющие процессом элементы.\par
+Скриншоты интерфейся программы представлены в приложении 1.
 \section{Реализация}
+\subsection{ETL}
+Процесс ETL выполняется скриптом, написанным на языке программирования Ruby. В ходе него из каждого филлиала выбираются данные, которые еще не были обработаны, формируются значения, для загрузки и производится сохранение подготовленных данных в хранилище. Исходный код программы составляет 400 строк.
+\subsection{Функции OLAP}
+Для проведения OLAP использовался следующий запрос:
+\begin{lstlisting}[language=SQL]
+SELECT 
+  @row_name_1 AS dim_1, 
+  @row_name_2 AS dim_2, 
+  @row_name_3 AS dim_3, 
+  CAST(SUM(sp.price) AS DECIMAL(15,2)) 
+FROM shipments sp 
+INNER JOIN suppliers s ON s.id = sp.sid 
+INNER JOIN parts p ON p.id = sp.pid 
+WHERE row_name_3  = dim_z_value 
+GROUP BY dim_1, dim_2, dim_3 WITH ROLLUP 
+UNION DISTINCT SELECT 
+  @row_name_1 AS dim_1, 
+  @row_name_2 AS dim_2, 
+  @row_name_3 AS dim_3, 
+  CAST(SUM(sp.price) AS DECIMAL(15,2)) 
+FROM shipments sp 
+INNER JOIN suppliers s ON s.id = sp.sid 
+INNER JOIN parts p ON p.id = sp.pid 
+WHERE row_name_3 = dim_z_value  
+GROUP BY dim_2, dim_1, dim_3 WITH ROLLUP
+\end{lstlisting},
+где @row_name_<i> - поле, которое будет использоваться в качестве измерения x, y и z (передаются в запрос из программы). Они выбираются пользователем 
+
+
+\subsection{Функции интеллектуального анализа данных}
+Функции интеллектуального анализа данных были реализованы с применением открытой платформы для анализа данных KNIME. \par
+Для выполнения кластеризации, классификации и поиска шаблонов 
+
+\section{Тестирование}
+
+\subsection{Генератор тестовых баз данных}
+Для тестирования работы программы был создан генератор модельных баз данных филлиалов компании. Генератор представляет собой консольное приложение, которое создает файлы базы данных в формате CSV(Comma-Separated  Values – значения, разделенные запятыми) в зависимости от указанных параметров запуска. Пример запуска генератора: 
+\begin{lstlisting}
+filer.py -sname=s.csv -pname=p.csv -spname=sp.csv
+-sqty=100 -pqty=100 -spqty=1000	
+-serr=10 -perr=10 -sperr=10
+\end{lstlisting}
+В параметрах запуска префиксы s, p, sp означают соответствующие таблицы модельной базы данных, префикс name – имя файла, префикс qty – количество записей в таблице, префикс err – процент ошибочных записей (имеющих  нарушения  ограничений  целостности,  указанных  в табл.~\tab{integrity}) в соответствующей таблице. \par
+Генератор данных был написан на языке Python. Количество строк исходного кода составляет 300.\par
+
+\subsection{ETL}
+С помощью генератора было создано две базы данных. В каждой таблице содержалось 10000 записей. Процент ошибочных записей равнялся 10\%.\par
+После проведения процесса ETL, в хранилище содержалось 18,130 записей в таблице suppliers, 16,339 записей в таблице частей, 18,130 записей в таблице поставок.
+
+\subsection{Функции OLAP}
+В приложении 2 представлены примеры результатов работы OLAP.
+
+\subsection{Функции интеллектуального анализа данных}
+
+\section{Заключение}
+В результате работы были спроектированы следующие компоненты системы:
+\begin{itemize}
+  \item спроектирован и реализован алгоритм процесса ETL;
+  \item спроектирован и реализован интерфейс приложения;
+  \item спроектированы и реализованы функции OLAP;
+  \item реализован интеллектуальный анализ данных с применением открытой платформы для аназиза данных, составления отчетов и интеграции KNIME;
+  \item реализован генератор модельных данных.
+\end{itemize}
+
+\section{Приложения}
+\subsection{Приложение 1. Интерфейс пользователя(основные формы)}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{interface1.png}
+  \caption{Интерфейс программы для выполнения ETL}
+  \label{etl-interface}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{interface2.png}
+  \caption{Интерфейс программы для выполнения OLAP}
+  \label{olap-interface}
+\end{figure}
+
+\subsection{Приложение 2. Тестирование функций OLAP}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{olap1.png}
+  \caption{Результат выполнения OLAP}
+  \label{olap-res-2}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{olap2.png}
+  \caption{Результат выполнения OLAP по годам и деталям, для поставщика Adobe}
+  \label{olap-res-1}
+\end{figure}
+
+\subsection{Приложение 3. Тестирование функцийи нтеллектуального анализа данных}
 
 \end{document}
