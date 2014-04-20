@@ -51,22 +51,22 @@ OLAP::cube_t OLAP::calculate(OLAP::Type dim_1, uint8_t detalisation_1, OLAP::Typ
 		row_name_1 << " AS dim_1," <<
 		row_name_2 << " AS dim_2," <<
 		row_name_3 << " AS dim_3, " <<
-		"CAST(SUM(sp.price) AS DECIMAL(8,2)) "
+		"CAST(SUM(sp.price) AS DECIMAL(15,2)) "
 		"FROM shipments sp "
 		"INNER JOIN suppliers s ON s.id = sp.sid "
 		"INNER JOIN parts p ON p.id = sp.pid "
 		"WHERE " << row_name_3 << " = \"" << dim_z_value << "\" "
 		"GROUP BY dim_1, dim_2, dim_3 WITH ROLLUP " <<
 		"UNION DISTINCT SELECT " <<
-			row_name_1 << " AS dim_1," <<
-			row_name_2 << " AS dim_2," <<
-			row_name_3 << " AS dim_3, " <<
-			"CAST(SUM(sp.price) AS DECIMAL(8,2)) "
-		"FROM shipments sp "
-		"INNER JOIN suppliers s ON s.id = sp.sid "
-		"INNER JOIN parts p ON p.id = sp.pid "
-		"WHERE " << row_name_3 << " = \"" << dim_z_value << "\" "
-		"GROUP BY dim_2, dim_1, dim_3 WITH ROLLUP";
+				row_name_1 << " AS dim_1," <<
+				row_name_2 << " AS dim_2," <<
+				row_name_3 << " AS dim_3, " <<
+				"CAST(SUM(sp.price) AS DECIMAL(15,2)) "
+			"FROM shipments sp "
+			"INNER JOIN suppliers s ON s.id = sp.sid "
+			"INNER JOIN parts p ON p.id = sp.pid "
+			"WHERE " << row_name_3 << " = \"" << dim_z_value << "\" "
+			"GROUP BY dim_2, dim_1, dim_3 WITH ROLLUP";
 
 	if (mysql_query(this->connection, cube_query.str().c_str()))
 		return cube_t();
