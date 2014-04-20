@@ -70,7 +70,7 @@ class Company
 			SP.Qty > 0 AND \
 			SP.Price > 0 AND \
 			SP.Period >= 0 AND \
-			SP.OrderDate <= CURDATE() AND \
+			SP.OrderDate <= CURDATE() AND SP.OrderDate <> 0 AND \
 			SP.OrderDate <= SP.ShipDate \
 		HAVING SPWeight BETWEEN 0 AND 1500"
 
