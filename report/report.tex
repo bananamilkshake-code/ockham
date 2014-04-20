@@ -363,12 +363,18 @@ INNER JOIN parts p ON p.id = sp.pid
 WHERE row_name_3 = dim_z_value  
 GROUP BY dim_2, dim_1, dim_3 WITH ROLLUP
 \end{lstlisting},
-где @row_name_<i> - поле, которое будет использоваться в качестве измерения x, y и z (передаются в запрос из программы). Они выбираются пользователем 
-
+где @row\_name\_<i> - поле, которое будет использоваться в качестве измерения x, y и z (передаются в запрос из программы). Они выбираются пользователем 
 
 \subsection{Функции интеллектуального анализа данных}
-Функции интеллектуального анализа данных были реализованы с применением открытой платформы для анализа данных KNIME. \par
-Для выполнения кластеризации, классификации и поиска шаблонов 
+Функции интеллектуального анализа данных были реализованы с применением открытой платформы для анализа данных KNIME. Скриншот проекта представлен на рисунке~\pic{data-mining}.\par
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.6]{etl-module.png}
+  \caption{Проект в KNIME для выполнения анализа данных хранилища}
+  \label{data-mining}
+\end{figure}
+Для выполнения кластеризации, классификации и поиска шаблонов было составлено три рабочих потока для каждого вида анализа данных соответственно. Данные для анализа загружаются непосредственно из подготовленного хранилища. \par
+Для кластеризации данных был использован узел k-means с количеством узлов равным 3 и максимальным количеством итераций равным 99. \par
 
 \section{Тестирование}
 
@@ -387,9 +393,10 @@ filer.py -sname=s.csv -pname=p.csv -spname=sp.csv
 После проведения процесса ETL, в хранилище содержалось 18,130 записей в таблице suppliers, 16,339 записей в таблице частей, 18,130 записей в таблице поставок.
 
 \subsection{Функции OLAP}
-В приложении 2 представлены примеры результатов работы OLAP.
+В Приложении 2 представлены примеры результатов работы OLAP.
 
 \subsection{Функции интеллектуального анализа данных}
+Результаты работы рабочих потоков для кластеризации, классификации и поиска шаблонов представлены в Приложении 3.
 
 \section{Заключение}
 В результате работы были спроектированы следующие компоненты системы:
@@ -401,6 +408,7 @@ filer.py -sname=s.csv -pname=p.csv -spname=sp.csv
   \item реализован генератор модельных данных.
 \end{itemize}
 
+\newpage
 \section{Приложения}
 \subsection{Приложение 1. Интерфейс пользователя(основные формы)}
 
@@ -418,22 +426,45 @@ filer.py -sname=s.csv -pname=p.csv -spname=sp.csv
   \label{olap-interface}
 \end{figure}
 
+\newpage
 \subsection{Приложение 2. Тестирование функций OLAP}
 
 \begin{figure}[h]
   \centering
-  \includegraphics[scale=0.4]{olap1.png}
+  \includegraphics[scale=0.38]{olap1.png}
   \caption{Результат выполнения OLAP}
   \label{olap-res-2}
 \end{figure}
 
 \begin{figure}[h]
   \centering
-  \includegraphics[scale=0.4]{olap2.png}
+  \includegraphics[scale=0.38]{olap2.png}
   \caption{Результат выполнения OLAP по годам и деталям, для поставщика Adobe}
   \label{olap-res-1}
 \end{figure}
 
-\subsection{Приложение 3. Тестирование функцийи нтеллектуального анализа данных}
+\newpage
+\subsection{Приложение 3. Тестирование функций\- интеллектуального анализа данных}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{classification.png}
+  \caption{Результат выполнения классификации}
+  \label{knime-classification}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{clusters.png}
+  \caption{Результат выполнения кластеризации}
+  \label{knime-clasterisation}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.4]{freq_patterns.png}
+  \caption{Результат выполнения поиска шаблонов}
+  \label{knime-patterns}
+\end{figure}
 
 \end{document}
