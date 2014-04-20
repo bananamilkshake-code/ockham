@@ -213,6 +213,7 @@ class Company
 
 		shipments_values = String.new
 		@shipments.each do |shipment|
+			next if shipment[:supplier_id].nil? or shipment[:part_id].nil?
 			shipments_values << ',' if not shipments_values.empty?
 			shipments_values << '('	<< shipment[:supplier_id].to_s << ',' << shipment[:part_id] << ',' \
 						<< shipment[:qty] << ',' << shipment[:price] << ',' << shipment[:part_price] << ',' << shipment[:weight] << ',' \
